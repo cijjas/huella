@@ -27,6 +27,30 @@ const getMediaInfo = (url: string): MediaInfo => {
 
   const cleanUrl = url.toLowerCase().trim()
 
+  // Convert Google Drive URLs to direct image URLs
+  const convertGoogleDriveUrl = (originalUrl: string): string => {
+    const driveRegex = /https:\/\/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)\//
+    const match = originalUrl.match(driveRegex)
+    
+    if (match && match[1]) {
+      const fileId = match[1]
+      return `https://drive.google.com/uc?export=view&id=${fileId}`
+    }
+    
+    return originalUrl
+  }
+
+  // Check if it's a Google Drive URL and convert it
+  if (cleanUrl.includes('drive.google.com/file/d/')) {
+    const directUrl = convertGoogleDriveUrl(url)
+    return {
+      type: "image",
+      embedUrl: directUrl,
+      thumbnailUrl: directUrl,
+      isEmbeddable: true
+    }
+  }
+
   // Image formats
   if (cleanUrl.match(/\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/)) {
     return {

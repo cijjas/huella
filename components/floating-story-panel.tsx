@@ -3,60 +3,60 @@
 import { X, ChevronLeft, ChevronRight, Minimize2, Maximize2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import MediaEmbed from "./media-embed"
+import { StorySelector } from "./story-selector"
+import { type StoryPoint } from "@/lib/csv-parser"
 
-interface StoryPoint {
+interface MapPoint {
   id: string
-  titulo: string
-  descripcion: string
-  autor: string
-  año: string
-  lugar: string
-  coordenadas: string
-  fuente: string
-  archivo: string
-  archivoDigital: string
-  categoria: string
-  observaciones?: string
+  stories: StoryPoint[]
+  coordinates: string
+  latitude: number
+  longitude: number
+  primaryStory: StoryPoint
 }
 
 interface FloatingStoryPanelProps {
-  point: StoryPoint | null
-  allPoints: StoryPoint[]
+  mapPoint: MapPoint | null
+  selectedStory: StoryPoint | null
+  allMapPoints: MapPoint[]
   onClose: () => void
-  onNavigate: (point: StoryPoint) => void
+  onNavigate: (mapPoint: MapPoint) => void
+  onStorySelect: (story: StoryPoint) => void
   isMinimized: boolean
   onToggleMinimize: () => void
 }
 
 export function FloatingStoryPanel({
-  point,
-  allPoints,
+  mapPoint,
+  selectedStory,
+  allMapPoints,
   onClose,
   onNavigate,
+  onStorySelect,
   isMinimized,
   onToggleMinimize,
 }: FloatingStoryPanelProps) {
-  if (!point) return null
+  if (!mapPoint || !selectedStory) return null
 
-  const currentIndex = allPoints.findIndex((p) => p.id === point.id)
+  const currentIndex = allMapPoints.findIndex((p) => p.id === mapPoint.id)
   const canGoBack = currentIndex > 0
-  const canGoForward = currentIndex < allPoints.length - 1
+  const canGoForward = currentIndex < allMapPoints.length - 1
 
   const handlePrevious = () => {
     if (canGoBack) {
-      onNavigate(allPoints[currentIndex - 1])
+      onNavigate(allMapPoints[currentIndex - 1])
     }
   }
 
   const handleNext = () => {
     if (canGoForward) {
-      onNavigate(allPoints[currentIndex + 1])
+      onNavigate(allMapPoints[currentIndex + 1])
     }
   }
 
   return (
     <div
-      className={`fixed top-4 right-4 w-96 z-[1000] transition-all duration-300 ${
+      className={`fixed top-4 right-4 w-[480px] z-[1000] transition-all duration-300 ${
         isMinimized ? "h-16" : "h-[calc(100vh-2rem)]"
       }`}
     >
@@ -73,7 +73,7 @@ export function FloatingStoryPanel({
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <span className="text-xs text-muted-foreground font-medium">
-              {currentIndex + 1} / {allPoints.length}
+              {currentIndex + 1} / {allMapPoints.length}
             </span>
             <Button
               variant="ghost"
@@ -103,9 +103,9 @@ export function FloatingStoryPanel({
 
         {isMinimized ? (
           <div className="p-4 cursor-pointer" onClick={onToggleMinimize}>
-            <h3 className="text-sm font-semibold text-foreground truncate font-heading">{point.titulo}</h3>
+            <h3 className="text-sm font-semibold text-foreground truncate font-heading">{selectedStory.titulo}</h3>
             <p className="text-xs text-muted-foreground truncate">
-              {point.lugar} • {point.año}
+              {selectedStory.lugar} • {selectedStory.año}
             </p>
           </div>
         ) : (
@@ -113,8 +113,8 @@ export function FloatingStoryPanel({
           <div className="flex-1 overflow-y-auto">
             {/* Image area */}
             <div className="h-48 bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center">
-              {point.archivoDigital && point.archivoDigital !== "-" ? (
-                <MediaEmbed url={point.archivoDigital} title={point.titulo} />
+              {selectedStory.archivoDigital && selectedStory.archivoDigital !== "-" ? (
+                <MediaEmbed url={selectedStory.archivoDigital} title={selectedStory.titulo} />
               ) : (
                 <div className="text-center p-8">
                   <div className="w-16 h-16 bg-primary/30 rounded-xl mx-auto mb-3 flex items-center justify-center">
@@ -125,63 +125,74 @@ export function FloatingStoryPanel({
               )}
             </div>
 
-            {/* Story content */}
-            <div className="p-6 space-y-4">
+            {/* Story Selector for multiple stories at same location */}
+            <StorySelector 
+              stories={mapPoint.stories}
+              selectedStory={selectedStory}
+              onStorySelect={onStorySelect}
+            />
+
+            {/* Story content with new elegant layout */}
+            <div className="p-6 space-y-6">
+              {/* Main Title */}
               <div>
-                <h2 className="text-xl font-bold text-foreground mb-2 font-heading">{point.titulo}</h2>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-                  <span className="px-3 py-1 bg-secondary/10 text-secondary rounded-full text-xs font-medium border border-secondary/20">
-                    {point.categoria}
-                  </span>
-                  <span>•</span>
-                  <span className="font-medium">{point.año}</span>
-                </div>
+                <h1 className="text-2xl font-bold text-foreground leading-tight font-heading tracking-wide">
+                  {selectedStory.titulo}
+                </h1>
               </div>
 
-              <div className="space-y-3">
-                <div>
-                  <div className="h-2 bg-muted rounded-full mb-2 opacity-30"></div>
-                  <div className="h-2 bg-muted rounded-full mb-2 w-4/5 opacity-25"></div>
-                  <div className="h-2 bg-muted rounded-full mb-2 w-3/4 opacity-20"></div>
-                  <div className="h-2 bg-muted rounded-full w-2/3 opacity-15"></div>
-                </div>
+              {/* Description */}
+              <div>
+                <p className="text-base leading-relaxed text-card-foreground font-body">
+                  {selectedStory.descripcion}
+                </p>
               </div>
 
-              {/* Actual content */}
-              <div className="space-y-4 text-sm text-card-foreground">
-                <div>
-                  <h3 className="font-semibold text-foreground mb-1 font-heading">Descripción</h3>
-                  <p className="leading-relaxed">{point.descripcion}</p>
-                </div>
-
-                <div>
-                  <h3 className="font-semibold text-foreground mb-1 font-heading">Lugar</h3>
-                  <p>{point.lugar}</p>
-                </div>
-
-                <div>
-                  <h3 className="font-semibold text-foreground mb-1 font-heading">Autor/a</h3>
-                  <p>{point.autor}</p>
-                </div>
-
-                {point.archivo && (
-                  <div>
-                    <h3 className="font-semibold text-foreground mb-1 font-heading">Archivo</h3>
-                    <p className="text-xs leading-relaxed italic text-muted-foreground bg-muted/30 p-3 rounded-lg border-l-4 border-primary/30">
-                      {point.archivo}
-                    </p>
+              {/* Elegant Metadata */}
+              <div className="grid grid-cols-2 gap-4 py-4 border-y border-border/20">
+                <div className="space-y-1">
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                    Autor/a
                   </div>
-                )}
-
-                <div>
-                  <h3 className="font-semibold text-foreground mb-1 font-heading">Fuente</h3>
-                  <p className="text-xs text-muted-foreground">{point.fuente}</p>
+                  <div className="text-sm font-medium text-foreground">
+                    {selectedStory.autor || "Autor desconocido"}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                    Fecha
+                  </div>
+                  <div className="text-sm font-medium text-foreground">
+                    {selectedStory.año || "Fecha desconocida"}
+                  </div>
                 </div>
               </div>
 
-              {/* Bottom placeholder bar */}
+              {/* Location - Separate Section */}
+              <div className="bg-muted/20 p-4 rounded-lg border-l-4 border-primary/40">
+                <div className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-1">
+                  Ubicación
+                </div>
+                <div className="text-sm font-medium text-foreground">
+                  {selectedStory.lugar}
+                </div>
+              </div>
+
+              {/* Category Badge */}
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium border border-primary/20">
+                  {selectedStory.categoria}
+                </span>
+              </div>
+
+              {/* Source - Bottom Metadata */}
               <div className="pt-4 border-t border-border/30">
-                <div className="h-2 bg-muted/50 rounded-full w-3/4"></div>
+                <div className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-2">
+                  Fuente
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed italic">
+                  {selectedStory.fuente}
+                </p>
               </div>
             </div>
           </div>

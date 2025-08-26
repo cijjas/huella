@@ -16,8 +16,31 @@ const MapView = dynamic(() => import("@/components/map-view"), {
 
 export default function TrenCostaApp() {
   const [storyPoints, setStoryPoints] = useState<StoryPoint[]>([])
-  const [filteredPoints, setFilteredPoints] = useState<StoryPoint[]>([])
-  const [selectedPoint, setSelectedPoint] = useState<StoryPoint | null>(null)
+  const [mapPoints, setMapPoints] = useState<Array<{
+    id: string
+    stories: StoryPoint[]
+    coordinates: string
+    latitude: number
+    longitude: number
+    primaryStory: StoryPoint
+  }>>([])
+  const [filteredMapPoints, setFilteredMapPoints] = useState<Array<{
+    id: string
+    stories: StoryPoint[]
+    coordinates: string
+    latitude: number
+    longitude: number
+    primaryStory: StoryPoint
+  }>>([])
+  const [selectedMapPoint, setSelectedMapPoint] = useState<{
+    id: string
+    stories: StoryPoint[]
+    coordinates: string
+    latitude: number
+    longitude: number
+    primaryStory: StoryPoint
+  } | null>(null)
+  const [selectedStory, setSelectedStory] = useState<StoryPoint | null>(null)
   const [isPanelMinimized, setIsPanelMinimized] = useState(false)
   const [yearRange, setYearRange] = useState<[number, number]>([1900, 2024])
   const [currentYear, setCurrentYear] = useState(2024)
@@ -31,12 +54,15 @@ export default function TrenCostaApp() {
         setLoading(true)
         setError(null)
 
-        const csvUrl =
-          "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Nuevo%20Archivo%20Tesis%20%20-%20Hoja%201-xbwDfzMSw7WRLJf2pM7nYQ8S94nd4J.csv"
+        const csvUrl = "/data.csv"
 
         const { points, stats } = await CSVParser.parseCSV(csvUrl)
 
         setStoryPoints(points)
+        
+        // Create map points from story points
+        const generatedMapPoints = CSVParser.createMapPoints(points)
+        setMapPoints(generatedMapPoints)
 
         if (stats.yearRange) {
           setYearRange(stats.yearRange)
@@ -55,35 +81,47 @@ export default function TrenCostaApp() {
   }, [])
 
   useEffect(() => {
-    let filtered = storyPoints
+    // Filter story points by year
+    const filtered = CSVParser.filterPointsByYear(storyPoints, currentYear, includeUnknownYears)
+    
+    // Create map points from filtered stories
+    const filteredMapPointsData = CSVParser.createMapPoints(filtered)
+    setFilteredMapPoints(filteredMapPointsData)
 
-    filtered = CSVParser.filterPointsByYear(filtered, currentYear, includeUnknownYears)
-
-    setFilteredPoints(filtered)
-
-    if (filtered.length > 0 && !selectedPoint) {
-      setSelectedPoint(filtered[0])
+    // Set initial selection
+    if (filteredMapPointsData.length > 0 && !selectedMapPoint) {
+      const firstMapPoint = filteredMapPointsData[0]
+      setSelectedMapPoint(firstMapPoint)
+      setSelectedStory(firstMapPoint.primaryStory)
       setIsPanelMinimized(false)
     }
-  }, [storyPoints, currentYear, includeUnknownYears, selectedPoint])
+  }, [storyPoints, currentYear, includeUnknownYears, selectedMapPoint])
 
-  const handlePointSelect = (point: StoryPoint) => {
-    setSelectedPoint(point)
+  const handleMapPointSelect = (mapPoint: typeof filteredMapPoints[0]) => {
+    setSelectedMapPoint(mapPoint)
+    setSelectedStory(mapPoint.primaryStory)
     setIsPanelMinimized(false)
   }
 
-  const handleStoryNavigate = (point: StoryPoint) => {
-    setSelectedPoint(point)
+  const handleStorySelect = (story: StoryPoint) => {
+    setSelectedStory(story)
+  }
+
+  const handleMapPointNavigate = (mapPoint: typeof filteredMapPoints[0]) => {
+    setSelectedMapPoint(mapPoint)
+    setSelectedStory(mapPoint.primaryStory)
   }
 
   const handlePanelClose = () => {
-    if (filteredPoints.length > 0) {
-      const currentIndex = filteredPoints.findIndex((p) => p.id === selectedPoint?.id)
-      const nextPoint = filteredPoints[currentIndex + 1] || filteredPoints[0]
-      setSelectedPoint(nextPoint)
+    if (filteredMapPoints.length > 0) {
+      const currentIndex = filteredMapPoints.findIndex((p) => p.id === selectedMapPoint?.id)
+      const nextMapPoint = filteredMapPoints[currentIndex + 1] || filteredMapPoints[0]
+      setSelectedMapPoint(nextMapPoint)
+      setSelectedStory(nextMapPoint.primaryStory)
       setIsPanelMinimized(true)
     } else {
-      setSelectedPoint(null)
+      setSelectedMapPoint(null)
+      setSelectedStory(null)
     }
   }
 
@@ -119,7 +157,7 @@ export default function TrenCostaApp() {
 
   return (
     <div className="h-screen bg-background paper-texture relative">
-      <MapView points={filteredPoints} selectedPoint={selectedPoint} onPointSelect={handlePointSelect} />
+      <MapView points={filteredMapPoints} selectedPoint={selectedMapPoint} onPointSelect={handleMapPointSelect} />
 
       <FloatingTimeline
         yearRange={yearRange}
@@ -129,14 +167,18 @@ export default function TrenCostaApp() {
         onIncludeUnknownChange={setIncludeUnknownYears}
       />
 
-      <FloatingStoryPanel
-        point={selectedPoint}
-        allPoints={filteredPoints}
-        onClose={handlePanelClose}
-        onNavigate={handleStoryNavigate}
-        isMinimized={isPanelMinimized}
-        onToggleMinimize={() => setIsPanelMinimized(!isPanelMinimized)}
-      />
+      {selectedMapPoint && (
+        <FloatingStoryPanel
+          mapPoint={selectedMapPoint}
+          selectedStory={selectedStory}
+          allMapPoints={filteredMapPoints}
+          onStorySelect={handleStorySelect}
+          onClose={handlePanelClose}
+          onNavigate={handleMapPointNavigate}
+          isMinimized={isPanelMinimized}
+          onToggleMinimize={() => setIsPanelMinimized(!isPanelMinimized)}
+        />
+      )}
     </div>
   )
 }

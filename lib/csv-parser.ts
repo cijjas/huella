@@ -76,14 +76,22 @@ export class CSVParser {
     }
 
     try {
-      const coords = coordString.split(",").map((coord) => Number.parseFloat(coord.trim()))
+      // Clean the coordinate string and remove any quotes
+      const cleanCoords = coordString.replace(/['"]/g, '').trim()
+      console.log('Parsing coordinates:', cleanCoords)
+      
+      const coords = cleanCoords.split(",").map((coord) => Number.parseFloat(coord.trim()))
+      console.log('Parsed coords array:', coords)
 
       if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
         const [lat, lng] = coords
+        console.log('Final lat/lng:', lat, lng)
 
         // Validate coordinate ranges (Buenos Aires area)
         if (lat >= -35 && lat <= -34 && lng >= -59 && lng <= -58) {
           return { lat, lng, isValid: true }
+        } else {
+          console.warn('Coordinates out of expected range:', lat, lng)
         }
       }
     } catch (error) {
@@ -142,7 +150,7 @@ export class CSVParser {
 
         const coordinates = this.parseCoordinates(values[6] || "")
         const parsedYear = this.parseYear(values[4] || "")
-        const categoria = values[10] || "Sin categoría"
+        const categoria = values[11] || "Sin categoría"
 
         const point: StoryPoint = {
           id: values[0] || `point-${i}`,
@@ -154,9 +162,9 @@ export class CSVParser {
           coordenadas: values[6] || "",
           fuente: values[7] || "",
           archivo: values[8] || "",
-          archivoDigital: values[9] || "",
+          archivoDigital: values[10] || "",
           categoria,
-          observaciones: values[11] || undefined,
+          observaciones: values[12] || undefined,
           parsedYear,
           hasValidCoordinates: coordinates.isValid,
           latitude: coordinates.lat,
@@ -200,6 +208,64 @@ export class CSVParser {
       }
       return point.parsedYear <= maxYear
     })
+  }
+
+  /**
+   * Groups story points by their coordinates to handle multiple stories at the same location
+   */
+  static groupPointsByLocation(points: StoryPoint[]): Map<string, StoryPoint[]> {
+    const groups = new Map<string, StoryPoint[]>()
+    
+    points.forEach(point => {
+      if (point.hasValidCoordinates && point.coordenadas) {
+        const coordKey = point.coordenadas.trim()
+        
+        if (!groups.has(coordKey)) {
+          groups.set(coordKey, [])
+        }
+        groups.get(coordKey)!.push(point)
+      }
+    })
+    
+    return groups
+  }
+
+  /**
+   * Creates representative points for map display, combining multiple stories at same location
+   */
+  static createMapPoints(points: StoryPoint[]): Array<{
+    id: string
+    stories: StoryPoint[]
+    coordinates: string
+    latitude: number
+    longitude: number
+    primaryStory: StoryPoint
+  }> {
+    const groups = this.groupPointsByLocation(points)
+    const mapPoints: Array<{
+      id: string
+      stories: StoryPoint[]
+      coordinates: string
+      latitude: number
+      longitude: number
+      primaryStory: StoryPoint
+    }> = []
+
+    groups.forEach((stories, coordinates) => {
+      if (stories.length > 0) {
+        const primaryStory = stories[0] // Use first story as primary
+        mapPoints.push({
+          id: `location-${coordinates}`,
+          stories,
+          coordinates,
+          latitude: primaryStory.latitude!,
+          longitude: primaryStory.longitude!,
+          primaryStory
+        })
+      }
+    })
+
+    return mapPoints
   }
 
   static getPointsByCategory(points: StoryPoint[], category: string): StoryPoint[] {

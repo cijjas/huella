@@ -166,4 +166,32 @@
     background-image: radial-gradient(circle at 2px 2px, rgba(217, 119, 6, 0.08) 1px, transparent 0);
     background-size: 24px 24px;
   }
+
+  /* Watercolor effect for map */
+  .watercolor-map .leaflet-tile-pane {
+    filter: sepia(10%) saturate(120%) contrast(95%) brightness(105%) hue-rotate(5deg);
+    opacity: 0.95;
+  }
+
+  .watercolor-map .leaflet-tile {
+    border-radius: 2px;
+    transition: all 0.3s ease;
+  }
+
+  /* Enhanced map markers */
+  .custom-marker {
+    cursor: pointer;
+    z-index: 1000;
+  }
+
+  .custom-marker:hover {
+    z-index: 1001;
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
+  }
+
+  .leaflet-marker-icon.custom-marker {
+    border: none !important;
+    background: none !important;
+  }
 }
