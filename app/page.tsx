@@ -54,7 +54,7 @@ export default function TrenCostaApp() {
         setLoading(true)
         setError(null)
 
-        const csvUrl = "/data.csv"
+        const csvUrl = "/archivo.csv"
 
         const { points, stats } = await CSVParser.parseCSV(csvUrl)
 

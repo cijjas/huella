@@ -1,16 +1,22 @@
 export interface StoryPoint {
+  // Direct CSV fields
   id: string
-  titulo: string
-  descripcion: string
-  autor: string
-  año: string
-  lugar: string
-  coordenadas: string
-  fuente: string
-  archivo: string
-  archivoDigital: string
-  categoria: string
-  observaciones?: string
+  title: string
+  description: string
+  author: string
+  year: string
+  location: string
+  lat: string
+  lng: string
+  metadata: string
+  driveUrl: string
+  imageUrl: string
+  
+  // Future columns for enhanced content
+  testimonial?: string
+  articleUrl?: string
+  
+  // Computed properties
   parsedYear?: number
   hasValidCoordinates: boolean
   latitude?: number
@@ -53,40 +59,68 @@ export class CSVParser {
     return result
   }
 
+  private static cleanText(text: string): string {
+    if (!text) return ""
+    
+    return text
+      .replace(/^["']|["']$/g, "") // Remove surrounding quotes
+      .replace(/""/g, '"') // Unescape double quotes
+      .replace(/\s+/g, ' ') // Replace multiple whitespace with single space
+      .trim() // Remove leading/trailing whitespace
+  }
+
+  private static cleanValue(value: string): string {
+    const cleaned = this.cleanText(value)
+    
+    // Handle common empty value patterns
+    if (cleaned === "" || cleaned === "-" || cleaned === "null" || cleaned === "undefined") {
+      return ""
+    }
+    
+    return cleaned
+  }
+
   private static parseYear(yearString: string): number | undefined {
-    if (!yearString || yearString === "-" || yearString.toLowerCase() === "unknown") {
+    const cleanedYear = this.cleanValue(yearString)
+    
+    if (!cleanedYear || cleanedYear.toLowerCase() === "unknown") {
       return undefined
     }
 
-    // Handle formats like "1.980", "1980", "1980-1985", etc.
-    const cleanYear = yearString.replace(/[^\d-]/g, "")
+    // Handle various year formats
+    const cleanYear = cleanedYear.replace(/[^\d-]/g, "")
+    
+    // Try to extract year from different formats
     const yearMatch = cleanYear.match(/(\d{4})/)
-
+    
     if (yearMatch) {
       const year = Number.parseInt(yearMatch[1])
+      return year >= 1800 && year <= new Date().getFullYear() ? year : undefined
+    }
+
+    // Handle "Circa" dates
+    const circaMatch = cleanedYear.match(/Circa\s+(\d{4})/i)
+    if (circaMatch) {
+      const year = Number.parseInt(circaMatch[1])
       return year >= 1800 && year <= new Date().getFullYear() ? year : undefined
     }
 
     return undefined
   }
 
-  private static parseCoordinates(coordString: string): { lat?: number; lng?: number; isValid: boolean } {
-    if (!coordString || coordString === "-") {
+  private static parseCoordinates(latString: string, lngString: string): { lat?: number; lng?: number; isValid: boolean } {
+    const cleanedLat = this.cleanValue(latString)
+    const cleanedLng = this.cleanValue(lngString)
+    
+    if (!cleanedLat || !cleanedLng) {
       return { isValid: false }
     }
 
     try {
-      // Clean the coordinate string and remove any quotes
-      const cleanCoords = coordString.replace(/['"]/g, '').trim()
-      console.log('Parsing coordinates:', cleanCoords)
+      const lat = Number.parseFloat(cleanedLat)
+      const lng = Number.parseFloat(cleanedLng)
       
-      const coords = cleanCoords.split(",").map((coord) => Number.parseFloat(coord.trim()))
-      console.log('Parsed coords array:', coords)
-
-      if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
-        const [lat, lng] = coords
-        console.log('Final lat/lng:', lat, lng)
-
+      if (!isNaN(lat) && !isNaN(lng)) {
         // Validate coordinate ranges (Buenos Aires area)
         if (lat >= -35 && lat <= -34 && lng >= -59 && lng <= -58) {
           return { lat, lng, isValid: true }
@@ -95,17 +129,10 @@ export class CSVParser {
         }
       }
     } catch (error) {
-      console.warn("Error parsing coordinates:", coordString, error)
+      console.warn("Error parsing coordinates:", cleanedLat, cleanedLng, error)
     }
 
     return { isValid: false }
-  }
-
-  private static cleanText(text: string): string {
-    return text
-      .replace(/^["']|["']$/g, "") // Remove surrounding quotes
-      .replace(/""/g, '"') // Unescape double quotes
-      .trim()
   }
 
   static async parseCSV(csvUrl: string): Promise<{
@@ -141,30 +168,37 @@ export class CSVParser {
       const years: number[] = []
 
       for (let i = 1; i < lines.length; i++) {
-        const values = this.parseCSVLine(lines[i]).map((v) => this.cleanText(v))
+        const values = this.parseCSVLine(lines[i]).map((v) => this.cleanValue(v))
 
         if (values.length < headers.length) {
           console.warn(`Row ${i + 1} has fewer columns than expected, skipping`)
           continue
         }
 
-        const coordinates = this.parseCoordinates(values[6] || "")
-        const parsedYear = this.parseYear(values[4] || "")
-        const categoria = values[11] || "Sin categoría"
-
+        const coordinates = this.parseCoordinates(values[6] || "", values[7] || "") // lat, lng
+        const parsedYear = this.parseYear(values[4] || "") // year
+        const metadata = values[8] || ""
+        
+        // Create the point object
         const point: StoryPoint = {
+          // Direct CSV fields
           id: values[0] || `point-${i}`,
-          titulo: values[1] || "Sin título",
-          descripcion: values[2] || "",
-          autor: values[3] || "Autor desconocido",
-          año: values[4] || "",
-          lugar: values[5] || "",
-          coordenadas: values[6] || "",
-          fuente: values[7] || "",
-          archivo: values[8] || "",
-          archivoDigital: values[10] || "",
-          categoria,
-          observaciones: values[12] || undefined,
+          title: values[1] || "Sin título",
+          description: values[2] || "",
+          author: values[3] || "Autor desconocido",
+          year: values[4] || "",
+          location: values[5] || "",
+          lat: values[6] || "",
+          lng: values[7] || "",
+          metadata,
+          driveUrl: values[9] || "",
+          imageUrl: values[10] || "",
+          
+          // Future columns for enhanced content
+          testimonial: values[11] || undefined,
+          articleUrl: values[12] || undefined,
+          
+          // Computed properties
           parsedYear,
           hasValidCoordinates: coordinates.isValid,
           latitude: coordinates.lat,
@@ -179,7 +213,8 @@ export class CSVParser {
           if (parsedYear) {
             years.push(parsedYear)
           }
-          categories[categoria] = (categories[categoria] || 0) + 1
+          const category = metadata || "Sin categoría"
+          categories[category] = (categories[category] || 0) + 1
         }
       }
 
@@ -217,8 +252,8 @@ export class CSVParser {
     const groups = new Map<string, StoryPoint[]>()
     
     points.forEach(point => {
-      if (point.hasValidCoordinates && point.coordenadas) {
-        const coordKey = point.coordenadas.trim()
+      if (point.hasValidCoordinates && point.lat && point.lng) {
+        const coordKey = `${point.lat}, ${point.lng}`
         
         if (!groups.has(coordKey)) {
           groups.set(coordKey, [])
@@ -269,18 +304,18 @@ export class CSVParser {
   }
 
   static getPointsByCategory(points: StoryPoint[], category: string): StoryPoint[] {
-    return points.filter((point) => point.categoria.toLowerCase() === category.toLowerCase())
+    return points.filter((point) => point.metadata.toLowerCase() === category.toLowerCase())
   }
 
   static searchPoints(points: StoryPoint[], query: string): StoryPoint[] {
     const searchTerm = query.toLowerCase()
     return points.filter(
       (point) =>
-        point.titulo.toLowerCase().includes(searchTerm) ||
-        point.descripcion.toLowerCase().includes(searchTerm) ||
-        point.autor.toLowerCase().includes(searchTerm) ||
-        point.lugar.toLowerCase().includes(searchTerm) ||
-        point.archivo.toLowerCase().includes(searchTerm),
+        point.title.toLowerCase().includes(searchTerm) ||
+        point.description.toLowerCase().includes(searchTerm) ||
+        point.author.toLowerCase().includes(searchTerm) ||
+        point.location.toLowerCase().includes(searchTerm) ||
+        point.metadata.toLowerCase().includes(searchTerm),
     )
   }
 }

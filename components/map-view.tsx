@@ -31,9 +31,9 @@ interface MapViewProps {
   onPointSelect: (point: MapPoint) => void;
 }
 
-const createCustomIcon = (categoria: string, isSelected: boolean) => {
-  const getColor = (cat: string) => {
-    switch (cat.toLowerCase()) {
+const createCustomIcon = (metadata: string, isSelected: boolean) => {
+  const getColor = (meta: string) => {
+    switch (meta.toLowerCase()) {
       case 'fotografía de estacion':
       case 'fotografía':
         return isSelected ? '#d97706' : '#374151';
@@ -46,7 +46,7 @@ const createCustomIcon = (categoria: string, isSelected: boolean) => {
     }
   };
 
-  const color = getColor(categoria);
+  const color = getColor(metadata);
   const size = isSelected ? 32 : 24;
   const innerSize = isSelected ? 22 : 18;
 
@@ -56,7 +56,9 @@ const createCustomIcon = (categoria: string, isSelected: boolean) => {
         position: relative;
         width: ${size}px;
         height: ${size}px;
-        transform: translate(-50%, -50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
       ">
         <div style="
           background-color: ${color};
@@ -65,10 +67,6 @@ const createCustomIcon = (categoria: string, isSelected: boolean) => {
           border-radius: 50%;
           border: 3px solid white;
           box-shadow: 0 4px 12px rgba(0,0,0,0.25), 0 0 0 2px rgba(217, 119, 6, 0.2);
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
           transition: all 0.3s ease;
           ${
             isSelected
@@ -84,13 +82,10 @@ const createCustomIcon = (categoria: string, isSelected: boolean) => {
             ? `
           <div style="
             position: absolute;
-            top: 50%;
-            left: 50%;
             width: ${size + 8}px;
             height: ${size + 8}px;
             border: 2px solid rgba(217, 119, 6, 0.4);
             border-radius: 50%;
-            transform: translate(-50%, -50%);
             animation: ripple 2s infinite;
           "></div>
         `
@@ -99,20 +94,20 @@ const createCustomIcon = (categoria: string, isSelected: boolean) => {
       </div>
       <style>
         @keyframes pulse {
-          0% { transform: translate(-50%, -50%) scale(1); }
-          50% { transform: translate(-50%, -50%) scale(1.1); }
-          100% { transform: translate(-50%, -50%) scale(1); }
+          0% { transform: scale(1); }
+          50% { transform: scale(1.1); }
+          100% { transform: scale(1); }
         }
         @keyframes ripple {
-          0% { opacity: 1; transform: translate(-50%, -50%) scale(0.8); }
-          100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+          0% { opacity: 1; transform: scale(0.8); }
+          100% { opacity: 0; transform: scale(1.5); }
         }
       </style>
     `,
     className: 'custom-marker',
-    iconSize: [size + 8, size + 8],
-    iconAnchor: [(size + 8) / 2, (size + 8) / 2],
-    popupAnchor: [0, -(size + 8) / 2],
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+    popupAnchor: [0, -size / 2],
   });
 };
 
@@ -147,15 +142,16 @@ export default function MapView({
         zoom={defaultZoom}
         minZoom={12}
         maxZoom={18}
-        className='w-full h-full watercolor-map'
+        className='w-full h-full dark-map'
         ref={mapRef}
         crs={L.CRS.EPSG3857}
       >
+        {/* Stadia.AlidadeSmoothDark base layer */}
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url='https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
+          attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url='https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png'
+          minZoom={0}
           maxZoom={20}
-          subdomains='abcd'
         />
 
         {/* OpenRailwayMap overlay for railway lines */}
@@ -177,7 +173,7 @@ export default function MapView({
               key={`${mapPoint.id}-${index}`}
               position={[mapPoint.latitude, mapPoint.longitude]}
               icon={createCustomIcon(
-                mapPoint.primaryStory.categoria,
+                mapPoint.primaryStory.metadata,
                 isSelected,
               )}
               eventHandlers={{
@@ -187,13 +183,13 @@ export default function MapView({
               <Popup>
                 <div className='min-w-[200px]'>
                   <h3 className='font-semibold text-sm mb-1 font-heading'>
-                    {mapPoint.primaryStory.titulo}
+                    {mapPoint.primaryStory.title}
                   </h3>
                   <p className='text-xs text-muted-foreground mb-2'>
-                    {mapPoint.primaryStory.lugar} • {mapPoint.primaryStory.año}
+                    {mapPoint.primaryStory.location} • {mapPoint.primaryStory.year}
                   </p>
                   <p className='text-xs leading-relaxed text-card-foreground'>
-                    {mapPoint.primaryStory.descripcion.substring(0, 100)}...
+                    {mapPoint.primaryStory.description.substring(0, 100)}...
                   </p>
                   {mapPoint.stories.length > 1 && (
                     <p className='text-xs text-amber-600 mt-1 font-medium'>

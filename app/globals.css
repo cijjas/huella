@@ -1,73 +1,74 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+
+
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Updated color palette for paper-like aesthetic with warm amber, cream, and deep gray tones */
-  --background: oklch(0.985 0.02 85); /* #fefce8 - Soft cream background */
-  --foreground: oklch(0.269 0 0); /* #374151 - Deep gray text */
-  --card: oklch(1 0 0); /* #ffffff - Pure white for cards */
-  --card-foreground: oklch(0.269 0 0); /* #374151 - Dark gray for card text */
-  --popover: oklch(1 0 0); /* #ffffff - White for popovers */
-  --popover-foreground: oklch(0.269 0 0); /* #374151 - Dark gray for popover text */
-  --primary: oklch(0.627 0.15 65); /* #d97706 - Warm amber primary */
-  --primary-foreground: oklch(1 0 0); /* #ffffff - White text on primary */
-  --secondary: oklch(0.708 0.15 120); /* #84cc16 - Fresh green accent */
-  --secondary-foreground: oklch(1 0 0); /* #ffffff - White text on secondary */
-  --muted: oklch(0.985 0.02 85); /* #fefce8 - Soft cream for muted elements */
-  --muted-foreground: oklch(0.439 0 0); /* #6b7280 - Medium gray for muted text */
-  --accent: oklch(0.708 0.15 120); /* #84cc16 - Green for accents */
-  --accent-foreground: oklch(1 0 0); /* #ffffff - White text on accents */
-  --destructive: oklch(0.577 0.245 27.325); /* #ef4444 - Red for destructive actions */
-  --destructive-foreground: oklch(1 0 0); /* #ffffff - White text on destructive */
-  --border: oklch(0.627 0.15 65); /* #d97706 - Amber borders */
-  --input: oklch(1 0 0); /* #ffffff - White input fields */
-  --ring: oklch(0.627 0.15 65 / 0.5); /* Amber ring with transparency */
-  --chart-1: oklch(0.627 0.15 65); /* #d97706 - Amber for charts */
-  --chart-2: oklch(0.708 0.15 120); /* #84cc16 - Green for charts */
-  --chart-3: oklch(0.269 0 0); /* #374151 - Dark gray for charts */
-  --chart-4: oklch(0.985 0.02 85); /* #fefce8 - Cream for charts */
-  --chart-5: oklch(1 0 0); /* #ffffff - White for charts */
-  --radius: 0.75rem; /* Increased border radius for softer paper-like feel */
-  --sidebar: oklch(0.985 0.02 85); /* #fefce8 - Soft cream for sidebar */
-  --sidebar-foreground: oklch(0.269 0 0); /* #374151 - Dark gray for sidebar text */
-  --sidebar-primary: oklch(0.627 0.15 65); /* #d97706 - Amber for primary sidebar */
-  --sidebar-primary-foreground: oklch(1 0 0); /* #ffffff - White text for primary sidebar */
-  --sidebar-accent: oklch(0.708 0.15 120); /* #84cc16 - Green for sidebar accents */
-  --sidebar-accent-foreground: oklch(1 0 0); /* #ffffff - White text for sidebar accents */
-  --sidebar-border: oklch(0.627 0.15 65); /* #d97706 - Amber for sidebar borders */
-  --sidebar-ring: oklch(0.627 0.15 65 / 0.5); /* Amber ring for sidebar */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
 }
 
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
+  --card: oklch(0.145 0 0);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
+  --popover: oklch(0.145 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.627 0.15 65);
-  --primary-foreground: oklch(0.145 0 0);
-  --secondary: oklch(0.708 0.15 120);
-  --secondary-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
   --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.708 0.15 120);
-  --accent-foreground: oklch(0.145 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.396 0.141 25.723);
   --destructive-foreground: oklch(0.637 0.237 25.331);
   --border: oklch(0.269 0 0);
   --input: oklch(0.269 0 0);
   --ring: oklch(0.439 0 0);
-  --chart-1: oklch(0.627 0.15 65);
-  --chart-2: oklch(0.708 0.15 120);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.627 0.15 65);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
@@ -112,11 +113,6 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-
-  /* Added better typography with Montserrat for headers and Open Sans for body */
-  --font-heading: "Montserrat", system-ui, sans-serif;
-  --font-body: "Open Sans", system-ui, sans-serif;
-  --font-sans: var(--font-body);
 }
 
 @layer base {
@@ -125,73 +121,5 @@
   }
   body {
     @apply bg-background text-foreground;
-    /* Added subtle paper texture and improved typography */
-    background-image: radial-gradient(circle at 1px 1px, rgba(217, 119, 6, 0.05) 1px, transparent 0);
-    background-size: 20px 20px;
-    font-family: var(--font-body);
-    line-height: 1.6;
-  }
-
-  /* Enhanced typography hierarchy for better readability */
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    font-family: var(--font-heading);
-    font-weight: 700;
-    line-height: 1.2;
-    letter-spacing: -0.025em;
-  }
-
-  /* Added paper-like styling for cards and panels */
-  .paper-card {
-    @apply bg-card border border-border/20 rounded-lg shadow-sm;
-    background-image: linear-gradient(
-      45deg,
-      transparent 24%,
-      rgba(217, 119, 6, 0.02) 25%,
-      rgba(217, 119, 6, 0.02) 26%,
-      transparent 27%,
-      transparent 74%,
-      rgba(217, 119, 6, 0.02) 75%,
-      rgba(217, 119, 6, 0.02) 76%,
-      transparent 77%
-    );
-    background-size: 30px 30px;
-  }
-
-  .paper-texture {
-    background-image: radial-gradient(circle at 2px 2px, rgba(217, 119, 6, 0.08) 1px, transparent 0);
-    background-size: 24px 24px;
-  }
-
-  /* Watercolor effect for map */
-  .watercolor-map .leaflet-tile-pane {
-    filter: sepia(10%) saturate(120%) contrast(95%) brightness(105%) hue-rotate(5deg);
-    opacity: 0.95;
-  }
-
-  .watercolor-map .leaflet-tile {
-    border-radius: 2px;
-    transition: all 0.3s ease;
-  }
-
-  /* Enhanced map markers */
-  .custom-marker {
-    cursor: pointer;
-    z-index: 1000;
-  }
-
-  .custom-marker:hover {
-    z-index: 1001;
-    transform: scale(1.1);
-    transition: transform 0.2s ease;
-  }
-
-  .leaflet-marker-icon.custom-marker {
-    border: none !important;
-    background: none !important;
   }
 }
