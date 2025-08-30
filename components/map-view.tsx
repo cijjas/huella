@@ -132,8 +132,14 @@ export default function MapView({
 }: MapViewProps) {
   const mapRef = useRef<L.Map>(null);
 
-  const defaultCenter: [number, number] = [-34.5, -58.48];
-  const defaultZoom = 13;
+  const defaultCenter: [number, number] = [-34.481406534405565, -58.45756925758625];
+  const defaultZoom = 17;
+  
+  // Define bounds to restrict map movement (Buenos Aires area)
+  const mapBounds: L.LatLngBoundsLiteral = [
+    [-34.8, -58.8], // Southwest corner
+    [-34.2, -58.2]  // Northeast corner
+  ];
 
   return (
     <div className='w-full h-full'>
@@ -145,13 +151,16 @@ export default function MapView({
         className='w-full h-full dark-map'
         ref={mapRef}
         crs={L.CRS.EPSG3857}
+        maxBounds={mapBounds}
+        maxBoundsViscosity={1.0}
       >
-        {/* Stadia.AlidadeSmoothDark base layer */}
+        {/* Dark base map layer */}
         <TileLayer
-          attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url='https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png'
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url={`https://tile.openstreetmap.org/{z}/{x}/{y}.png`}
           minZoom={0}
-          maxZoom={20}
+          maxZoom={22}
+          className="map-dark-layer"
         />
 
         {/* OpenRailwayMap overlay for railway lines */}
@@ -160,10 +169,20 @@ export default function MapView({
           url='https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png'
           maxZoom={19}
           subdomains='abc'
-          opacity={0.7}
         />
 
         <MapController selectedPoint={selectedPoint} />
+
+        {/* Visual bounds rectangle (optional - for debugging) */}
+        {/* <Rectangle
+          bounds={mapBounds}
+          pathOptions={{
+            color: 'red',
+            weight: 2,
+            fillOpacity: 0.1,
+            fillColor: 'red'
+          }}
+        /> */}
 
         {points.map((mapPoint, index) => {
           const isSelected = selectedPoint?.id === mapPoint.id;

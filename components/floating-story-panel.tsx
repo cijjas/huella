@@ -1,12 +1,14 @@
 "use client"
 
-import { X, ChevronLeft, ChevronRight, Minimize2, Maximize2 } from "lucide-react"
+import { ChevronLeft, ChevronRight, Minimize2, Maximize2, ChevronUp, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
 import { type StoryPoint } from "@/lib/csv-parser"
 import Image from "next/image"
 import { getImageUrl } from "@/lib/utils"
+import { useState } from "react"
+import { ImageGalleryModal } from "@/components/image-gallery-modal"
 
 interface MapPoint {
   id: string
@@ -38,6 +40,10 @@ export function FloatingStoryPanel({
   isMinimized,
   onToggleMinimize,
 }: FloatingStoryPanelProps) {
+  const [fotografiasShown, setFotografiasShown] = useState(6)
+  const [showImageGallery, setShowImageGallery] = useState(false)
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  
   if (!mapPoint || !selectedStory) return null
 
   const currentIndex = allMapPoints.findIndex((p) => p.id === mapPoint.id)
@@ -46,12 +52,18 @@ export function FloatingStoryPanel({
 
   const handlePrevious = () => {
     if (canGoBack) {
+      setFotografiasShown(6)
+      setShowImageGallery(false)
+      setSelectedImageIndex(0)
       onNavigate(allMapPoints[currentIndex - 1])
     }
   }
 
   const handleNext = () => {
     if (canGoForward) {
+      setFotografiasShown(6)
+      setShowImageGallery(false)
+      setSelectedImageIndex(0)
       onNavigate(allMapPoints[currentIndex + 1])
     }
   }
@@ -77,13 +89,23 @@ export function FloatingStoryPanel({
     story.articleUrl
   )
 
+  // Image gallery handlers
+  const openImageGallery = (index: number) => {
+    setSelectedImageIndex(index)
+    setShowImageGallery(true)
+  }
+
+  const closeImageGallery = () => {
+    setShowImageGallery(false)
+  }
+
   return (
     <div
-      className={`fixed top-4 right-4 w-[480px] z-[1000] transition-all duration-300 ${
+      className={`fixed top-4 right-4 w-[640px] z-[1000] transition-all duration-300 ${
         isMinimized ? "h-16" : "h-[calc(100vh-2rem)]"
       }`}
     >
-      <div className="bg-card shadow-2xl h-full overflow-hidden border-4 border-primary rounded-2xl">
+      <div className="bg-card shadow-2xl h-full overflow-hidden  border-primary rounded-2xl">
         <div className="flex items-center justify-between p-4 border-b border-border/30 bg-card/95 backdrop-blur-sm">
           <div className="flex items-center gap-2">
             <Button
@@ -129,9 +151,9 @@ export function FloatingStoryPanel({
             </p>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto">
-            {/* Main Image */}
-            <div className="h-48 bg-gradient-to-br from-muted/20 to-muted/40 flex items-center justify-center overflow-hidden">
+          <div className="flex-1 overflow-y-auto scrollbar-thin">
+            {/* Main Image with Title Overlay */}
+            <div className="relative h-48 bg-gradient-to-br from-muted/20 to-muted/40 flex items-center justify-center overflow-hidden">
               {(() => {
                 const imageUrl = getImageUrl(mapPoint.primaryStory)
                 return imageUrl ? (
@@ -154,27 +176,19 @@ export function FloatingStoryPanel({
                   </div>
                 )
               })()}
+              
+              {/* Title Card Overlay */}
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 drop-shadow-2xl">
+                <Card className="bg-white/95 backdrop-blur-sm shadow-xl border-0 px-6 py-3 rounded-xl">
+                  <h1 className="text-xl font-bold text-foreground leading-tight font-heading tracking-wide whitespace-nowrap">
+                    {mapPoint.primaryStory.location}
+                  </h1>
+                </Card>
+              </div>
             </div>
-            
-            
 
-            {/* Content */}
-            <div className="p-6 space-y-6">
-              {/* Title */}
-              <div>
-                <h1 className="text-2xl font-bold text-foreground leading-tight font-heading tracking-wide">
-                  {mapPoint.primaryStory.location}
-                </h1>
-              </div>
-
-              {/* Description */}
-              <div>
-                <p className="text-base leading-relaxed text-card-foreground font-body">
-                  {mapPoint.primaryStory.description}
-                </p>
-              </div>
-
-              {/* Tabs */}
+            {/* Tabs Only */}
+            <div className="p-6">
               <Tabs defaultValue="fotografias" className="w-full">
                 <TabsList className="w-full">
                   <TabsTrigger value="fotografias" className="flex-1">
@@ -188,37 +202,73 @@ export function FloatingStoryPanel({
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="fotografias" className="mt-4">
-                  <div className="grid grid-cols-3 gap-3">
-                    {fotografias.slice(0, 5).map((story, index) => (
-                      <Card key={story.id} className="cursor-pointer hover:bg-accent/5 transition-colors">
-                        <CardContent className="p-2">
-                          <div className="aspect-square bg-muted rounded-lg flex items-center justify-center mb-2 overflow-hidden">
-                            {(() => {
-                              const imageUrl = getImageUrl(story)
-                              return imageUrl ? (
-                                <Image 
-                                  src={imageUrl}
-                                  alt={story.title}
-                                  width={120}
-                                  height={120}
-                                  className="w-full h-full object-cover rounded-lg"
-                                />
-                              ) : (
-                                <span className="text-muted-foreground">
-                                  img{index + 1}
-                                </span>
-                              )
-                            })()}
-                          </div>
-                          <p className="text-xs text-muted-foreground truncate">{story.title}</p>
-                        </CardContent>
-                      </Card>
-                    ))}
+                <TabsContent value="fotografias" className="mt-4 max-h-[calc(100vh-400px)] overflow-y-auto scrollbar-thin">
+                  <div className="space-y-3">
+                    {/* Grid of images */}
+                    <div className="grid grid-cols-3 gap-2">
+                      {fotografias.slice(0, fotografiasShown).map((story, index) => (
+                        <Card 
+                          key={story.id} 
+                          className="cursor-pointer hover:bg-accent/90  transition-colors p-0  border-none"
+                          onClick={() => openImageGallery(index)}
+                        >
+                          <CardContent className="p-2">
+                            <div className="aspect-square bg-muted rounded-lg flex items-center justify-center  overflow-hidden">
+                              {(() => {
+                                const imageUrl = getImageUrl(story)
+                                return imageUrl ? (
+                                  <Image 
+                                    src={imageUrl}
+                                    alt={story.title}
+                                    width={180}
+                                    height={180}
+                                    className="w-full h-full object-cover rounded-lg"
+                                  />
+                                ) : (
+                                  <span className="text-muted-foreground">
+                                    img{index + 1}
+                                  </span>
+                                )
+                              })()}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                    
+                    {/* Show more/less button */}
+                    {fotografias.length > 6 && (
+                      <div className="flex justify-center pt-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            if (fotografiasShown >= fotografias.length) {
+                              setFotografiasShown(6)
+                            } else {
+                              setFotografiasShown(Math.min(fotografiasShown + 6, fotografias.length))
+                            }
+                          }}
+                          className="text-xs text-muted-foreground hover:text-foreground"
+                        >
+                          {fotografiasShown >= fotografias.length ? (
+                            <>
+                              <ChevronUp className="h-3 w-3 mr-1" />
+                              Mostrar menos
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown className="h-3 w-3 mr-1" />
+                              Mostrar {Math.min(6, fotografias.length - fotografiasShown)} más
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </TabsContent>
 
-                <TabsContent value="testimonios" className="mt-4">
+                <TabsContent value="testimonios" className="mt-4 max-h-[calc(100vh-400px)] overflow-y-auto scrollbar-thin">
                   <div className="space-y-3">
                     {testimonios.map((story) => (
                       <Card key={story.id} className="cursor-pointer hover:bg-accent/5 transition-colors">
@@ -238,7 +288,7 @@ export function FloatingStoryPanel({
                   </div>
                 </TabsContent>
 
-                <TabsContent value="articulos" className="mt-4">
+                <TabsContent value="articulos" className="mt-4 max-h-[calc(100vh-400px)] overflow-y-auto scrollbar-thin">
                   <div className="space-y-3">
                     {articulos.map((story) => (
                       <Card key={story.id} className="cursor-pointer hover:bg-accent/5 transition-colors">
@@ -274,6 +324,14 @@ export function FloatingStoryPanel({
           </div>
         )}
       </div>
+
+      {/* Image Gallery Modal */}
+      <ImageGalleryModal
+        isOpen={showImageGallery}
+        onClose={closeImageGallery}
+        fotografias={fotografias}
+        startIndex={selectedImageIndex}
+      />
     </div>
   )
 }

@@ -156,7 +156,7 @@ export default function TrenCostaApp() {
   }
 
   return (
-    <div className="h-screen bg-background paper-texture relative">
+    <div className="h-screen bg-stone-900 paper-texture relative">
       <MapView points={filteredMapPoints} selectedPoint={selectedMapPoint} onPointSelect={handleMapPointSelect} />
 
       <FloatingTimeline
