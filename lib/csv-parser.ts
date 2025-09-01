@@ -3,21 +3,21 @@ export interface StoryPoint {
   id: string
   title: string
   description: string
-  author: string
-  year: string
+  source: string
+  bibliographicReference: string
+  date: string
   location: string
   lat: string
   lng: string
   metadata: string
-  driveUrl: string
-  imageUrl: string
-  
-  // Future columns for enhanced content
-  testimonial?: string
-  articleUrl?: string
+  drivePhotoUrl: string
+  driveArticlePhotoUrl: string
+  testimonial: string
+  videoUrl: string
   
   // Computed properties
   parsedYear?: number
+  parsedDate?: Date
   hasValidCoordinates: boolean
   latitude?: number
   longitude?: number
@@ -62,9 +62,16 @@ export class CSVParser {
   private static cleanText(text: string): string {
     if (!text) return ""
     
-    return text
-      .replace(/^["']|["']$/g, "") // Remove surrounding quotes
-      .replace(/""/g, '"') // Unescape double quotes
+    // Only remove surrounding quotes if the entire field is wrapped in quotes
+    // This preserves legitimate quotes within the content
+    let cleaned = text
+    if ((text.startsWith('"') && text.endsWith('"')) || 
+        (text.startsWith("'") && text.endsWith("'"))) {
+      cleaned = text.slice(1, -1)
+    }
+    
+    return cleaned
+      .replace(/""/g, '"') // Unescape double quotes (CSV escaping)
       .replace(/\s+/g, ' ') // Replace multiple whitespace with single space
       .trim() // Remove leading/trailing whitespace
   }
@@ -80,32 +87,56 @@ export class CSVParser {
     return cleaned
   }
 
-  private static parseYear(yearString: string): number | undefined {
-    const cleanedYear = this.cleanValue(yearString)
+  private static parseDate(dateString: string): { year?: number; date?: Date } {
+    const cleanedDate = this.cleanValue(dateString)
     
-    if (!cleanedYear || cleanedYear.toLowerCase() === "unknown") {
-      return undefined
+    if (!cleanedDate || cleanedDate.toLowerCase() === "unknown") {
+      return {}
     }
 
-    // Handle various year formats
-    const cleanYear = cleanedYear.replace(/[^\d-]/g, "")
-    
-    // Try to extract year from different formats
-    const yearMatch = cleanYear.match(/(\d{4})/)
-    
+    // Handle dd/mm/yyyy format (precise dates)
+    const preciseMatch = cleanedDate.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+    if (preciseMatch) {
+      const day = Number.parseInt(preciseMatch[1])
+      const month = Number.parseInt(preciseMatch[2])
+      const year = Number.parseInt(preciseMatch[3])
+      
+      if (year >= 1800 && year <= new Date().getFullYear() && 
+          month >= 1 && month <= 12 && 
+          day >= 1 && day <= 31) {
+        const date = new Date(year, month - 1, day)
+        return { year, date }
+      }
+    }
+
+    // Handle single year (e.g., "1993")
+    const yearMatch = cleanedDate.match(/^(\d{4})$/)
     if (yearMatch) {
       const year = Number.parseInt(yearMatch[1])
-      return year >= 1800 && year <= new Date().getFullYear() ? year : undefined
+      if (year >= 1800 && year <= new Date().getFullYear()) {
+        return { year }
+      }
+    }
+
+    // Handle various year formats within text
+    const yearInTextMatch = cleanedDate.match(/(\d{4})/)
+    if (yearInTextMatch) {
+      const year = Number.parseInt(yearInTextMatch[1])
+      if (year >= 1800 && year <= new Date().getFullYear()) {
+        return { year }
+      }
     }
 
     // Handle "Circa" dates
-    const circaMatch = cleanedYear.match(/Circa\s+(\d{4})/i)
+    const circaMatch = cleanedDate.match(/Circa\s+(\d{4})/i)
     if (circaMatch) {
       const year = Number.parseInt(circaMatch[1])
-      return year >= 1800 && year <= new Date().getFullYear() ? year : undefined
+      if (year >= 1800 && year <= new Date().getFullYear()) {
+        return { year }
+      }
     }
 
-    return undefined
+    return {}
   }
 
   private static parseCoordinates(latString: string, lngString: string): { lat?: number; lng?: number; isValid: boolean } {
@@ -175,9 +206,9 @@ export class CSVParser {
           continue
         }
 
-        const coordinates = this.parseCoordinates(values[6] || "", values[7] || "") // lat, lng
-        const parsedYear = this.parseYear(values[4] || "") // year
-        const metadata = values[8] || ""
+        const coordinates = this.parseCoordinates(values[7] || "", values[8] || "") // lat, lng
+        const parsedDate = this.parseDate(values[5] || "") // date
+        const metadata = values[9] || ""
         
         // Create the point object
         const point: StoryPoint = {
@@ -185,21 +216,21 @@ export class CSVParser {
           id: values[0] || `point-${i}`,
           title: values[1] || "Sin título",
           description: values[2] || "",
-          author: values[3] || "Autor desconocido",
-          year: values[4] || "",
-          location: values[5] || "",
-          lat: values[6] || "",
-          lng: values[7] || "",
+          source: values[3] || "Fuente desconocida",
+          bibliographicReference: values[4] || "",
+          date: values[5] || "",
+          location: values[6] || "",
+          lat: values[7] || "",
+          lng: values[8] || "",
           metadata,
-          driveUrl: values[9] || "",
-          imageUrl: values[10] || "",
-          
-          // Future columns for enhanced content
-          testimonial: values[11] || undefined,
-          articleUrl: values[12] || undefined,
+          drivePhotoUrl: values[10] || "",
+          driveArticlePhotoUrl: values[11] || "",
+          testimonial: values[12] || "",
+          videoUrl: values[13] || "",
           
           // Computed properties
-          parsedYear,
+          parsedYear: parsedDate.year,
+          parsedDate: parsedDate.date,
           hasValidCoordinates: coordinates.isValid,
           latitude: coordinates.lat,
           longitude: coordinates.lng,
@@ -210,8 +241,8 @@ export class CSVParser {
           points.push(point)
 
           // Collect stats
-          if (parsedYear) {
-            years.push(parsedYear)
+          if (parsedDate.year) {
+            years.push(parsedDate.year)
           }
           const category = metadata || "Sin categoría"
           categories[category] = (categories[category] || 0) + 1
@@ -247,19 +278,55 @@ export class CSVParser {
 
   /**
    * Groups story points by their coordinates to handle multiple stories at the same location
+   * Includes validation to ensure same lat/lng coordinates are properly grouped
    */
   static groupPointsByLocation(points: StoryPoint[]): Map<string, StoryPoint[]> {
     const groups = new Map<string, StoryPoint[]>()
+    const coordinateValidation = new Map<string, { lat: number; lng: number; locations: Set<string> }>()
     
     points.forEach(point => {
-      if (point.hasValidCoordinates && point.lat && point.lng) {
-        const coordKey = `${point.lat}, ${point.lng}`
+      if (point.hasValidCoordinates && point.latitude !== undefined && point.longitude !== undefined) {
+        // Use precise coordinates for grouping
+        const coordKey = `${point.latitude}, ${point.longitude}`
+        
+        // Validate coordinate consistency
+        if (coordinateValidation.has(coordKey)) {
+          const existing = coordinateValidation.get(coordKey)!
+          existing.locations.add(point.location)
+          
+          // Check for coordinate precision issues
+          if (Math.abs(existing.lat - point.latitude) > 0.0001 || 
+              Math.abs(existing.lng - point.longitude) > 0.0001) {
+            console.warn(`Coordinate precision mismatch for key ${coordKey}:`, {
+              existing: { lat: existing.lat, lng: existing.lng },
+              current: { lat: point.latitude, lng: point.longitude },
+              locations: Array.from(existing.locations)
+            })
+          }
+        } else {
+          coordinateValidation.set(coordKey, {
+            lat: point.latitude,
+            lng: point.longitude,
+            locations: new Set([point.location])
+          })
+        }
         
         if (!groups.has(coordKey)) {
           groups.set(coordKey, [])
         }
         groups.get(coordKey)!.push(point)
       }
+    })
+    
+    // Log grouping statistics
+    console.log('Location grouping statistics:', {
+      totalPoints: points.length,
+      uniqueLocations: groups.size,
+      groupSizes: Array.from(groups.entries()).map(([key, stories]) => ({
+        coordinates: key,
+        storyCount: stories.length,
+        locations: [...new Set(stories.map(s => s.location))]
+      }))
     })
     
     return groups
@@ -313,7 +380,7 @@ export class CSVParser {
       (point) =>
         point.title.toLowerCase().includes(searchTerm) ||
         point.description.toLowerCase().includes(searchTerm) ||
-        point.author.toLowerCase().includes(searchTerm) ||
+        point.source.toLowerCase().includes(searchTerm) ||
         point.location.toLowerCase().includes(searchTerm) ||
         point.metadata.toLowerCase().includes(searchTerm),
     )

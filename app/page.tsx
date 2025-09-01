@@ -54,7 +54,7 @@ export default function TrenCostaApp() {
         setLoading(true)
         setError(null)
 
-        const csvUrl = "/archivo.csv"
+        const csvUrl = "/archivo-nuevo.csv"
 
         const { points, stats } = await CSVParser.parseCSV(csvUrl)
 
@@ -127,7 +127,7 @@ export default function TrenCostaApp() {
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-background">
+      <div className="h-screen flex items-center justify-center bg-stone-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground font-medium">Cargando historias del Tren de la Costa...</p>
@@ -138,7 +138,7 @@ export default function TrenCostaApp() {
 
   if (error) {
     return (
-      <div className="h-screen flex items-center justify-center bg-background">
+      <div className="h-screen flex items-center justify-center bg-stone-50">
         <Card className="max-w-md paper-card">
           <CardContent className="pt-6">
             <div className="text-center">

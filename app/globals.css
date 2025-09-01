@@ -163,10 +163,41 @@
 
 /* Map layer styling for dark background effect */
 .map-dark-layer {
-  filter: saturate(0.8) brightness(0.3) ;
+  filter: saturate(0.8) brightness(0.5) ;
 }
 
 /* Dark map container styling */
 .dark-map {
   background-color: #000;
 }
+
+.leaflet-control-attribution {
+  
+  background: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  padding: 6px 12px !important;
+  border-radius: 8px !important;
+  font-size: 11px !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  transition: all 0.3s ease !important;
+}
+
+.leaflet-control-attribution:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2) !important;
+}
+
+.leaflet-control-attribution a {
+  color: rgba(255, 255, 255, 0.9) !important;
+  text-decoration: none !important;
+}
+
+.leaflet-control-attribution a:hover {
+  color: white !important;
+  text-decoration: underline !important;
+}
+

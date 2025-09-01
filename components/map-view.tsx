@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { type StoryPoint } from '@/lib/csv-parser';
+import { MapPopup, createCustomIcon } from './map-popup';
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -31,85 +32,7 @@ interface MapViewProps {
   onPointSelect: (point: MapPoint) => void;
 }
 
-const createCustomIcon = (metadata: string, isSelected: boolean) => {
-  const getColor = (meta: string) => {
-    switch (meta.toLowerCase()) {
-      case 'fotografía de estacion':
-      case 'fotografía':
-        return isSelected ? '#d97706' : '#374151';
-      case 'testimonio':
-        return isSelected ? '#d97706' : '#84cc16';
-      case 'literatura':
-        return isSelected ? '#d97706' : '#eab308';
-      default:
-        return isSelected ? '#d97706' : '#6b7280';
-    }
-  };
 
-  const color = getColor(metadata);
-  const size = isSelected ? 32 : 24;
-  const innerSize = isSelected ? 22 : 18;
-
-  return L.divIcon({
-    html: `
-      <div style="
-        position: relative;
-        width: ${size}px;
-        height: ${size}px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      ">
-        <div style="
-          background-color: ${color};
-          width: ${innerSize}px;
-          height: ${innerSize}px;
-          border-radius: 50%;
-          border: 3px solid white;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.25), 0 0 0 2px rgba(217, 119, 6, 0.2);
-          transition: all 0.3s ease;
-          ${
-            isSelected
-              ? `
-            animation: pulse 2s infinite;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.3), 0 0 0 4px rgba(217, 119, 6, 0.3);
-          `
-              : ''
-          }
-        "></div>
-        ${
-          isSelected
-            ? `
-          <div style="
-            position: absolute;
-            width: ${size + 8}px;
-            height: ${size + 8}px;
-            border: 2px solid rgba(217, 119, 6, 0.4);
-            border-radius: 50%;
-            animation: ripple 2s infinite;
-          "></div>
-        `
-            : ''
-        }
-      </div>
-      <style>
-        @keyframes pulse {
-          0% { transform: scale(1); }
-          50% { transform: scale(1.1); }
-          100% { transform: scale(1); }
-        }
-        @keyframes ripple {
-          0% { opacity: 1; transform: scale(0.8); }
-          100% { opacity: 0; transform: scale(1.5); }
-        }
-      </style>
-    `,
-    className: 'custom-marker',
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
-    popupAnchor: [0, -size / 2],
-  });
-};
 
 function MapController({ selectedPoint }: { selectedPoint: MapPoint | null }) {
   const map = useMap();
@@ -200,22 +123,7 @@ export default function MapView({
               }}
             >
               <Popup>
-                <div className='min-w-[200px]'>
-                  <h3 className='font-semibold text-sm mb-1 font-heading'>
-                    {mapPoint.primaryStory.title}
-                  </h3>
-                  <p className='text-xs text-muted-foreground mb-2'>
-                    {mapPoint.primaryStory.location} • {mapPoint.primaryStory.year}
-                  </p>
-                  <p className='text-xs leading-relaxed text-card-foreground'>
-                    {mapPoint.primaryStory.description.substring(0, 100)}...
-                  </p>
-                  {mapPoint.stories.length > 1 && (
-                    <p className='text-xs text-amber-600 mt-1 font-medium'>
-                      +{mapPoint.stories.length - 1} más en esta ubicación
-                    </p>
-                  )}
-                </div>
+                <MapPopup mapPoint={mapPoint} />
               </Popup>
             </Marker>
           );

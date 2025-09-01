@@ -53,15 +53,23 @@ export function convertDriveUrlToThumbnail(driveUrl: string, size: string = 'w10
  * @param story - The story point object
  * @returns The best available image URL
  */
-export function getImageUrl(story: { imageUrl?: string; driveUrl?: string }): string {
-  // First try imageUrl
-  if (story.imageUrl && story.imageUrl !== '-' && story.imageUrl.trim()) {
-    return convertDriveUrlToThumbnail(story.imageUrl)
+export function getImageUrl(story?: { 
+  drivePhotoUrl?: string; 
+  driveArticlePhotoUrl?: string; 
+}): string {
+  // Check if story exists
+  if (!story) {
+    return ''
   }
   
-  // Then try driveUrl
-  if (story.driveUrl && story.driveUrl !== '-' && story.driveUrl.trim()) {
-    return convertDriveUrlToThumbnail(story.driveUrl)
+  // Priority 1: drivePhotoUrl (primary image field)
+  if (story.drivePhotoUrl && story.drivePhotoUrl !== '-' && story.drivePhotoUrl.trim()) {
+    return convertDriveUrlToThumbnail(story.drivePhotoUrl)
+  }
+  
+  // Priority 2: driveArticlePhotoUrl (secondary image field)
+  if (story.driveArticlePhotoUrl && story.driveArticlePhotoUrl !== '-' && story.driveArticlePhotoUrl.trim()) {
+    return convertDriveUrlToThumbnail(story.driveArticlePhotoUrl)
   }
   
   return ''

@@ -8,17 +8,20 @@ import Image from "next/image"
 import { getImageUrl } from "@/lib/utils"
 import { useState, useRef, useEffect, useCallback } from "react"
 
-interface ImageGalleryModalProps {
+interface PhotoGalleryModalProps {
   isOpen: boolean
   onClose: () => void
   fotografias: StoryPoint[]
   startIndex?: number
 }
 
-export function ImageGalleryModal({ isOpen, onClose, fotografias, startIndex = 0 }: ImageGalleryModalProps) {
-  const [currentIndex, setCurrentIndex] = useState(startIndex)
+export function PhotoGalleryModal({ isOpen, onClose, fotografias, startIndex = 0 }: PhotoGalleryModalProps) {
+  // Ensure startIndex is within bounds
+  const validStartIndex = Math.max(0, Math.min(startIndex, fotografias.length - 1))
+  const [currentIndex, setCurrentIndex] = useState(validStartIndex)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [isVisible, setIsVisible] = useState(false)
   const playIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   // Define all callback functions first
@@ -73,8 +76,22 @@ export function ImageGalleryModal({ isOpen, onClose, fotografias, startIndex = 0
   
   // Update currentIndex when startIndex changes
   useEffect(() => {
-    setCurrentIndex(startIndex)
-  }, [startIndex])
+    const validStartIndex = Math.max(0, Math.min(startIndex, fotografias.length - 1))
+    setCurrentIndex(validStartIndex)
+  }, [startIndex, fotografias.length])
+
+  // Control visibility transition for smooth fade-in
+  useEffect(() => {
+    if (isOpen) {
+      // Small delay to ensure smooth transition
+      const timer = setTimeout(() => {
+        setIsVisible(true)
+      }, 50)
+      return () => clearTimeout(timer)
+    } else {
+      setIsVisible(false)
+    }
+  }, [isOpen])
 
   // Cleanup interval on unmount
   useEffect(() => {
@@ -135,11 +152,23 @@ export function ImageGalleryModal({ isOpen, onClose, fotografias, startIndex = 0
   if (!isOpen) return null
 
   const currentStory = fotografias[currentIndex]
+  
+  // Check if currentStory exists and currentIndex is valid
+  if (!currentStory || currentIndex < 0 || currentIndex >= fotografias.length) {
+    return null
+  }
+  
   const imageUrl = getImageUrl(currentStory)
 
   if (isFullscreen) {
     return (
-      <div className="fixed inset-0 z-[2000] bg-black/90 backdrop-blur-sm flex items-center justify-center">
+      <div 
+        className={`fixed inset-0 z-[2000] flex items-center justify-center transition-all duration-1000 ease-in-out ${
+          isVisible 
+            ? 'bg-black/90' 
+            : 'bg-black/0'
+        }`}
+      >
         {/* Fullscreen - Only image and navigation */}
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
           {/* Previous Button */}
@@ -197,10 +226,18 @@ export function ImageGalleryModal({ isOpen, onClose, fotografias, startIndex = 0
     )
   }
 
-      return (
-      <div className="fixed inset-0 z-[2000] bg-black/50 backdrop-blur-sm flex flex-col">
+        return (
+          <div 
+        className={`fixed inset-0 z-[2000] flex flex-col transition-all duration-1000 ease-in-out ${
+          isVisible 
+            ? 'bg-black/50' 
+            : 'bg-black/0'
+        }`}
+      >
       {/* Close Button */}
-      <div className="absolute top-4 right-4 z-30">
+      <div className={`absolute top-4 right-4 z-30 transition-opacity duration-1000 ease-in-out ${
+        isVisible ? 'opacity-100' : 'opacity-0'
+      }`}>
         <Button
           variant="ghost"
           size="icon"
@@ -214,29 +251,50 @@ export function ImageGalleryModal({ isOpen, onClose, fotografias, startIndex = 0
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Information Panel */}
-        <div className="w-80 bg-black/90 backdrop-blur-sm p-6 flex flex-col justify-center">
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-white font-semibold text-lg mb-2 drop-shadow-lg">Location</h3>
-              <p className="text-gray-200 drop-shadow-md">{currentStory.location}</p>
+        <div className={`w-80 bg-black/95 backdrop-blur-md p-6 flex flex-col justify-center transition-opacity duration-1000 ease-in-out ${
+          isVisible ? 'opacity-100' : 'opacity-0'
+        }`}>
+          <div className="space-y-8">
+            {/* Header Info */}
+            <div className="flex justify-between items-center text-white text-sm drop-shadow-md">
+              <span>{currentStory.location}</span>
+              <span>{currentStory.date}</span>
             </div>
-            <div>
-              <h3 className="text-white font-semibold text-lg mb-2 drop-shadow-lg">Title</h3>
-              <p className="text-gray-200 drop-shadow-md">{currentStory.title}</p>
+
+            {/* Main Content Group */}
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-white font-bold text-xl mb-3 drop-shadow-lg">Título</h3>
+                <p className="text-white text-lg leading-tight drop-shadow-md">{currentStory.title}</p>
+              </div>
+              
+              <div>
+                <h3 className="text-white font-semibold text-base mb-2 drop-shadow-lg">Descripción</h3>
+                <p className="text-white text-sm leading-relaxed drop-shadow-md">{currentStory.description}</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-white font-semibold text-lg mb-2 drop-shadow-lg">Description</h3>
-              <p className="text-gray-200 text-sm leading-relaxed drop-shadow-md">{currentStory.description}</p>
-            </div>
-            <div>
-              <h3 className="text-green-300 font-semibold text-lg mb-2 drop-shadow-lg">Year</h3>
-              <p className="text-green-300 drop-shadow-md">{currentStory.year}</p>
+
+            {/* Metadata Group */}
+            <div className="space-y-4 pt-4 border-t border-white/20">
+              <div>
+                <h3 className="text-white font-semibold text-base mb-2 drop-shadow-lg">Fuente</h3>
+                <p className="text-white text-sm drop-shadow-md">{currentStory.source}</p>
+              </div>
+              
+              {currentStory.bibliographicReference && (
+                <div>
+                  <h3 className="text-white font-semibold text-base mb-2 drop-shadow-lg">Referencia Bibliográfica</h3>
+                  <p className="text-white text-xs leading-relaxed drop-shadow-md">{currentStory.bibliographicReference}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Central Image Area */}
-        <div className="flex-1 bg-black/40 backdrop-blur-sm relative flex flex-col overflow-hidden">
+        <div className={`flex-1 bg-black/60 backdrop-blur-sm relative flex flex-col overflow-hidden transition-opacity duration-1000 ease-in-out ${
+          isVisible ? 'opacity-100' : 'opacity-0'
+        }`}>
           {/* Main Image */}
           <div className="flex-1 flex items-center justify-center p-8 overflow-hidden">
             <div className="w-full h-full flex items-center justify-center overflow-hidden">
@@ -299,8 +357,10 @@ export function ImageGalleryModal({ isOpen, onClose, fotografias, startIndex = 0
         </div>
       </div>
 
-              {/* Bottom Thumbnails */}
-        <div className="h-32 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+                    {/* Bottom Thumbnails */}
+      <div className={`h-32 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 transition-opacity duration-1000 ease-in-out ${
+        isVisible ? 'opacity-100' : 'opacity-0'
+      }`}>
         <div className="flex gap-3 overflow-x-auto max-w-full">
           {fotografias.map((story, index) => {
             const thumbUrl = getImageUrl(story)
