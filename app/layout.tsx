@@ -18,9 +18,9 @@ const openSans = Open_Sans({
 })
 
 export const metadata: Metadata = {
-  title: "El Tren de la Costa - Interactive Stories",
+  title: "La Vía Muerta - Huella Histórica",
   description:
-    "Explore the history and culture of El Tren de la Costa through interactive maps, timelines, and stories",
+    "Explora las huellas históricas de la Vía Muerta a través de mapas interactivos, cronologías e historias",
   generator: "v0.app",
 }
 
