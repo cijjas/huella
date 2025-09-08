@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { imageCache } from "./image-cache"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -51,7 +52,7 @@ export function convertDriveUrlToThumbnail(driveUrl: string, size: string = 'w10
 /**
  * Gets the best available image URL from a story point
  * @param story - The story point object
- * @returns The best available image URL
+ * @returns The best available image URL (cached if available, otherwise original URL)
  */
 export function getImageUrl(story?: { 
   drivePhotoUrl?: string; 
@@ -64,12 +65,43 @@ export function getImageUrl(story?: {
   
   // Priority 1: drivePhotoUrl (primary image field)
   if (story.drivePhotoUrl && story.drivePhotoUrl !== '-' && story.drivePhotoUrl.trim()) {
-    return convertDriveUrlToThumbnail(story.drivePhotoUrl)
+    const thumbnailUrl = convertDriveUrlToThumbnail(story.drivePhotoUrl)
+    return imageCache.getCachedImageUrl(thumbnailUrl)
   }
   
   // Priority 2: driveArticlePhotoUrl (secondary image field)
   if (story.driveArticlePhotoUrl && story.driveArticlePhotoUrl !== '-' && story.driveArticlePhotoUrl.trim()) {
-    return convertDriveUrlToThumbnail(story.driveArticlePhotoUrl)
+    const thumbnailUrl = convertDriveUrlToThumbnail(story.driveArticlePhotoUrl)
+    return imageCache.getCachedImageUrl(thumbnailUrl)
+  }
+  
+  return ''
+}
+
+/**
+ * Lazy loads an image URL and returns the cached version when ready
+ * @param story - The story point object
+ * @returns Promise that resolves to the cached image URL
+ */
+export async function getLazyImageUrl(story?: { 
+  drivePhotoUrl?: string; 
+  driveArticlePhotoUrl?: string; 
+}): Promise<string> {
+  // Check if story exists
+  if (!story) {
+    return ''
+  }
+  
+  // Priority 1: drivePhotoUrl (primary image field)
+  if (story.drivePhotoUrl && story.drivePhotoUrl !== '-' && story.drivePhotoUrl.trim()) {
+    const thumbnailUrl = convertDriveUrlToThumbnail(story.drivePhotoUrl)
+    return await imageCache.lazyLoadImage(thumbnailUrl)
+  }
+  
+  // Priority 2: driveArticlePhotoUrl (secondary image field)
+  if (story.driveArticlePhotoUrl && story.driveArticlePhotoUrl !== '-' && story.driveArticlePhotoUrl.trim()) {
+    const thumbnailUrl = convertDriveUrlToThumbnail(story.driveArticlePhotoUrl)
+    return await imageCache.lazyLoadImage(thumbnailUrl)
   }
   
   return ''

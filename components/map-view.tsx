@@ -66,6 +66,7 @@ export default function MapView({
 
   return (
     <div className='w-full h-full'>
+
       <MapContainer
         center={defaultCenter}
         zoom={defaultZoom}
@@ -78,9 +79,11 @@ export default function MapView({
         maxBoundsViscosity={1.0}
       >
         {/* Dark base map layer */}
+
+        
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url={`https://tile.openstreetmap.org/{z}/{x}/{y}.png`}
+          url={`https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png`}
           minZoom={0}
           maxZoom={22}
           className="map-dark-layer"

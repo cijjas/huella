@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button"
 import { AlertCircle } from "lucide-react"
 import { CSVParser, type StoryPoint } from "@/lib/csv-parser"
 import { FloatingStoryPanel } from "@/components/floating-story-panel"
-import { FloatingTimeline } from "@/components/floating-timeline"
+import { TrenDelBajoOverlay } from "@/components/tren-del-bajo-overlay"
+import { imageCache } from "@/lib/image-cache"
 
 const MapView = dynamic(() => import("@/components/map-view"), {
   ssr: false,
@@ -42,9 +43,6 @@ export default function TrenCostaApp() {
   } | null>(null)
   const [selectedStory, setSelectedStory] = useState<StoryPoint | null>(null)
   const [isPanelMinimized, setIsPanelMinimized] = useState(false)
-  const [yearRange, setYearRange] = useState<[number, number]>([1900, 2024])
-  const [currentYear, setCurrentYear] = useState(2024)
-  const [includeUnknownYears, setIncludeUnknownYears] = useState(true)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -64,11 +62,6 @@ export default function TrenCostaApp() {
         const generatedMapPoints = CSVParser.createMapPoints(points)
         setMapPoints(generatedMapPoints)
 
-        if (stats.yearRange) {
-          setYearRange(stats.yearRange)
-          setCurrentYear(stats.yearRange[1])
-        }
-
         setLoading(false)
       } catch (error) {
         console.error("Error loading data:", error)
@@ -78,14 +71,16 @@ export default function TrenCostaApp() {
     }
 
     loadData()
+
+    // Cleanup function to clear image cache when component unmounts
+    return () => {
+      imageCache.clearCache()
+    }
   }, [])
 
   useEffect(() => {
-    // Filter story points by year
-    const filtered = CSVParser.filterPointsByYear(storyPoints, currentYear, includeUnknownYears)
-    
-    // Create map points from filtered stories
-    const filteredMapPointsData = CSVParser.createMapPoints(filtered)
+    // Create map points from all stories (no filtering)
+    const filteredMapPointsData = CSVParser.createMapPoints(storyPoints)
     setFilteredMapPoints(filteredMapPointsData)
 
     // Set initial selection
@@ -95,7 +90,7 @@ export default function TrenCostaApp() {
       setSelectedStory(firstMapPoint.primaryStory)
       setIsPanelMinimized(false)
     }
-  }, [storyPoints, currentYear, includeUnknownYears, selectedMapPoint])
+  }, [storyPoints, selectedMapPoint])
 
   const handleMapPointSelect = (mapPoint: typeof filteredMapPoints[0]) => {
     setSelectedMapPoint(mapPoint)
@@ -157,15 +152,9 @@ export default function TrenCostaApp() {
 
   return (
     <div className="h-screen bg-stone-900 paper-texture relative">
+      <TrenDelBajoOverlay />
       <MapView points={filteredMapPoints} selectedPoint={selectedMapPoint} onPointSelect={handleMapPointSelect} />
 
-      <FloatingTimeline
-        yearRange={yearRange}
-        currentYear={currentYear}
-        onYearChange={setCurrentYear}
-        includeUnknown={includeUnknownYears}
-        onIncludeUnknownChange={setIncludeUnknownYears}
-      />
 
       {selectedMapPoint && (
         <FloatingStoryPanel

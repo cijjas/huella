@@ -33,14 +33,87 @@ export function TestimonialGalleryModal({ isOpen, onClose, testimonials, startIn
   const [isVisible, setIsVisible] = useState(false)
   const playIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
+  // Helper function to get decade from date
+  const getDecade = (date: string): number | null => {
+    if (!date || date.trim() === '') return null
+    
+    // Try to extract year from various formats
+    const yearMatch = date.match(/(\d{4})/)
+    if (yearMatch) {
+      const year = parseInt(yearMatch[1])
+      return Math.floor(year / 10) * 10
+    }
+    
+    return null
+  }
+
+  // Helper function to sort by date then by title
+  const sortByDateAndTitle = (a: any, b: any) => {
+    const dateA = a.date || a.year || ''
+    const dateB = b.date || b.year || ''
+    
+    // If both have dates, compare them
+    if (dateA && dateB) {
+      const yearA = dateA.match(/(\d{4})/)?.[1] || '0'
+      const yearB = dateB.match(/(\d{4})/)?.[1] || '0'
+      if (yearA !== yearB) {
+        return parseInt(yearA) - parseInt(yearB)
+      }
+    }
+    
+    // If dates are equal or one is missing, sort by title
+    return (a.title || '').localeCompare(b.title || '')
+  }
+
+  // Helper function to group items by decade
+  const groupByDecade = (items: any[]) => {
+    const grouped: { [key: string]: any[] } = {}
+    const noDateItems: any[] = []
+    
+    items.forEach(item => {
+      const decade = getDecade(item.date || item.year || '')
+      if (decade !== null) {
+        const decadeKey = `${decade}s`
+        if (!grouped[decadeKey]) {
+          grouped[decadeKey] = []
+        }
+        grouped[decadeKey].push(item)
+      } else {
+        noDateItems.push(item)
+      }
+    })
+    
+    // Sort items within each decade
+    Object.keys(grouped).forEach(decade => {
+      grouped[decade].sort(sortByDateAndTitle)
+    })
+    
+    // Sort decades
+    const sortedDecades = Object.keys(grouped).sort((a, b) => {
+      const decadeA = parseInt(a.replace('s', ''))
+      const decadeB = parseInt(b.replace('s', ''))
+      return decadeA - decadeB
+    })
+    
+    return { grouped, sortedDecades, noDateItems }
+  }
+
+  const testimonialsGrouped = groupByDecade(testimonials)
+
+  // Create chronologically sorted array for navigation
+  const sortedTestimonials = [
+    ...testimonialsGrouped.sortedDecades.flatMap(decade => testimonialsGrouped.grouped[decade]),
+    ...testimonialsGrouped.noDateItems
+  ]
+
   // Define all callback functions first
   const handlePrevious = useCallback(() => {
-    setCurrentIndex(prev => prev > 0 ? prev - 1 : testimonials.length - 1)
-  }, [testimonials.length])
+    setCurrentIndex(prev => prev > 0 ? prev - 1 : sortedTestimonials.length - 1)
+  }, [sortedTestimonials.length])
 
   const handleNext = useCallback(() => {
-    setCurrentIndex(prev => prev < testimonials.length - 1 ? prev + 1 : 0)
-  }, [testimonials.length])
+    setCurrentIndex(prev => prev < sortedTestimonials.length - 1 ? prev + 1 : 0)
+  }, [sortedTestimonials.length])
 
   const handlePlayPause = useCallback(() => {
     if (isPlaying) {
@@ -85,9 +158,9 @@ export function TestimonialGalleryModal({ isOpen, onClose, testimonials, startIn
   
   // Update currentIndex when startIndex changes
   useEffect(() => {
-    const validStartIndex = Math.max(0, Math.min(startIndex, testimonials.length - 1))
+    const validStartIndex = Math.max(0, Math.min(startIndex, sortedTestimonials.length - 1))
     setCurrentIndex(validStartIndex)
-  }, [startIndex, testimonials.length])
+  }, [startIndex, sortedTestimonials.length])
 
   // Control visibility transition for smooth fade-in
   useEffect(() => {
@@ -160,10 +233,10 @@ export function TestimonialGalleryModal({ isOpen, onClose, testimonials, startIn
 
   if (!isOpen) return null
 
-  const currentTestimonial = testimonials[currentIndex]
+  const currentTestimonial = sortedTestimonials[currentIndex]
   
   // Check if currentTestimonial exists and currentIndex is valid
-  if (!currentTestimonial || currentIndex < 0 || currentIndex >= testimonials.length) {
+  if (!currentTestimonial || currentIndex < 0 || currentIndex >= sortedTestimonials.length) {
     return null
   }
 
@@ -392,27 +465,82 @@ export function TestimonialGalleryModal({ isOpen, onClose, testimonials, startIn
         </div>
       </div>
 
-      {/* Bottom Thumbnails */}
-      <div className={`h-32 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 transition-opacity duration-1000 ease-in-out ${
+      {/* Bottom Thumbnails with Year Separation */}
+      <div className={`h-40 bg-black/95 backdrop-blur-md flex flex-col transition-opacity duration-1000 ease-in-out ${
         isVisible ? 'opacity-100' : 'opacity-0'
       }`}>
-        <div className="flex gap-3 overflow-x-auto max-w-full">
-          {testimonials.map((testimonial, index) => (
-            <div
-              key={testimonial.id}
-              onClick={() => handleThumbnailClick(index)}
-              className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden cursor-pointer border-2 transition-all bg-gray-800 flex items-center justify-center ${
-                index === currentIndex 
-                  ? 'border-blue-500 shadow-lg' 
-                  : 'border-gray-600 hover:border-gray-400'
-              }`}
-            >
-              <div className="text-center p-2">
-                <Quote className="h-6 w-6 text-gray-400 mx-auto mb-1" />
-                <p className="text-xs text-gray-300 truncate">{testimonial.author}</p>
+        <div className="flex-1 overflow-x-auto overflow-y-hidden p-4">
+          <div className="flex gap-4 h-full items-center justify-center">
+            {/* Timeline by decades */}
+            {testimonialsGrouped.sortedDecades.map((decade) => (
+              <div key={decade} className="flex-shrink-0">
+                {/* Decade separator */}
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="flex-1 h-px bg-gray-600"></div>
+                  <span className="text-xs font-medium text-gray-400 px-2 whitespace-nowrap">{decade}</span>
+                  <div className="flex-1 h-px bg-gray-600"></div>
+                </div>
+                
+                {/* Thumbnails in this decade */}
+                <div className="flex gap-2">
+                  {testimonialsGrouped.grouped[decade].map((testimonial) => {
+                    const sortedIndex = sortedTestimonials.findIndex(t => t.id === testimonial.id)
+                    return (
+                      <div
+                        key={testimonial.id}
+                        onClick={() => handleThumbnailClick(sortedIndex)}
+                        className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden cursor-pointer border-2 transition-all bg-gray-800 flex items-center justify-center ${
+                          sortedIndex === currentIndex 
+                            ? 'border-blue-500 shadow-lg' 
+                            : 'border-gray-600 hover:border-gray-400'
+                        }`}
+                      >
+                        <div className="text-center p-1">
+                          <Quote className="h-4 w-4 text-gray-400 mx-auto mb-1" />
+                          <p className="text-xs text-gray-300 truncate">{testimonial.author}</p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+            
+            {/* Items without date */}
+            {testimonialsGrouped.noDateItems.length > 0 && (
+              <div className="flex-shrink-0">
+                {/* No date separator */}
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="flex-1 h-px bg-gray-600"></div>
+                  <span className="text-xs font-medium text-gray-400 px-2 whitespace-nowrap">Sin fecha</span>
+                  <div className="flex-1 h-px bg-gray-600"></div>
+                </div>
+                
+                {/* Thumbnails without date */}
+                <div className="flex gap-2">
+                  {testimonialsGrouped.noDateItems.map((testimonial) => {
+                    const sortedIndex = sortedTestimonials.findIndex(t => t.id === testimonial.id)
+                    return (
+                      <div
+                        key={testimonial.id}
+                        onClick={() => handleThumbnailClick(sortedIndex)}
+                        className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden cursor-pointer border-2 transition-all bg-gray-800 flex items-center justify-center ${
+                          sortedIndex === currentIndex 
+                            ? 'border-blue-500 shadow-lg' 
+                            : 'border-gray-600 hover:border-gray-400'
+                        }`}
+                      >
+                        <div className="text-center p-1">
+                          <Quote className="h-4 w-4 text-gray-400 mx-auto mb-1" />
+                          <p className="text-xs text-gray-300 truncate">{testimonial.author}</p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

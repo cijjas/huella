@@ -149,8 +149,14 @@ export function FloatingStoryPanel({
 
   const fotografiasGrouped = groupByDecade(fotografias)
 
+  // Create chronologically sorted array that matches the photo gallery modal
+  const sortedFotografias = [
+    ...fotografiasGrouped.sortedDecades.flatMap(decade => fotografiasGrouped.grouped[decade]),
+    ...fotografiasGrouped.noDateItems
+  ]
+
   // Reset selectedImageIndex if it's out of bounds
-  if (selectedImageIndex >= fotografias.length && fotografias.length > 0) {
+  if (selectedImageIndex >= sortedFotografias.length && sortedFotografias.length > 0) {
     setSelectedImageIndex(0)
   }
   
@@ -202,10 +208,11 @@ export function FloatingStoryPanel({
   const videosGrouped = groupByDecade(videos)
 
   // Image gallery handlers
-  const openImageGallery = (index: number) => {
-    // Ensure the index is valid
-    if (index >= 0 && index < fotografias.length) {
-      setSelectedImageIndex(index)
+  const openImageGallery = (story: StoryPoint) => {
+    // Find the correct index in the sorted array that matches the photo gallery modal
+    const sortedIndex = sortedFotografias.findIndex(s => s.id === story.id)
+    if (sortedIndex >= 0) {
+      setSelectedImageIndex(sortedIndex)
       setShowImageGallery(true)
     }
   }
@@ -375,13 +382,12 @@ export function FloatingStoryPanel({
                             {/* Items in this decade */}
                             <div className="grid grid-cols-3 gap-2">
                               {fotografiasGrouped.grouped[decade].map((story, index) => {
-                                const globalIndex = fotografias.findIndex(s => s.id === story.id)
                                 const imageUrl = getImageUrl(story)
                                 return (
                                   <div 
                                     key={story.id} 
                                     className="cursor-pointer aspect-square bg-stone-50 rounded-md overflow-hidden hover:opacity-80 transition-opacity"
-                                    onClick={() => openImageGallery(globalIndex)}
+                                    onClick={() => openImageGallery(story)}
                                   >
                                     {imageUrl ? (
                                       <Image 
@@ -394,7 +400,7 @@ export function FloatingStoryPanel({
                                     ) : (
                                       <div className="w-full h-full flex items-center justify-center">
                                         <span className="text-muted-foreground text-sm">
-                                          img{globalIndex + 1}
+                                          img{index + 1}
                                         </span>
                                       </div>
                                     )}
@@ -418,13 +424,12 @@ export function FloatingStoryPanel({
                             {/* Items without date */}
                             <div className="grid grid-cols-3 gap-2">
                               {fotografiasGrouped.noDateItems.map((story, index) => {
-                                const globalIndex = fotografias.findIndex(s => s.id === story.id)
                                 const imageUrl = getImageUrl(story)
                                 return (
                                   <div 
                                     key={story.id} 
                                     className="cursor-pointer aspect-square bg-stone-50 rounded-md overflow-hidden hover:opacity-80 transition-opacity"
-                                    onClick={() => openImageGallery(globalIndex)}
+                                    onClick={() => openImageGallery(story)}
                                   >
                                     {imageUrl ? (
                                       <Image 
@@ -437,7 +442,7 @@ export function FloatingStoryPanel({
                                     ) : (
                                       <div className="w-full h-full flex items-center justify-center">
                                         <span className="text-muted-foreground text-sm">
-                                          img{globalIndex + 1}
+                                          img{index + 1}
                                         </span>
                                       </div>
                                     )}
@@ -914,11 +919,11 @@ export function FloatingStoryPanel({
       </div>
 
       {/* Photo Gallery Modal */}
-      {fotografias.length > 0 && (
+      {sortedFotografias.length > 0 && (
         <PhotoGalleryModal
           isOpen={showImageGallery}
           onClose={closeImageGallery}
-          fotografias={fotografias}
+          fotografias={sortedFotografias}
           startIndex={selectedImageIndex}
         />
       )}

@@ -33,6 +33,79 @@ export function VideoGalleryModal({ isOpen, onClose, videos, startIndex = 0 }: V
   const [isVisible, setIsVisible] = useState(false)
   const playIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
+  // Helper function to get decade from date
+  const getDecade = (date: string): number | null => {
+    if (!date || date.trim() === '') return null
+    
+    // Try to extract year from various formats
+    const yearMatch = date.match(/(\d{4})/)
+    if (yearMatch) {
+      const year = parseInt(yearMatch[1])
+      return Math.floor(year / 10) * 10
+    }
+    
+    return null
+  }
+
+  // Helper function to sort by date then by title
+  const sortByDateAndTitle = (a: any, b: any) => {
+    const dateA = a.date || a.year || ''
+    const dateB = b.date || b.year || ''
+    
+    // If both have dates, compare them
+    if (dateA && dateB) {
+      const yearA = dateA.match(/(\d{4})/)?.[1] || '0'
+      const yearB = dateB.match(/(\d{4})/)?.[1] || '0'
+      if (yearA !== yearB) {
+        return parseInt(yearA) - parseInt(yearB)
+      }
+    }
+    
+    // If dates are equal or one is missing, sort by title
+    return (a.title || '').localeCompare(b.title || '')
+  }
+
+  // Helper function to group items by decade
+  const groupByDecade = (items: any[]) => {
+    const grouped: { [key: string]: any[] } = {}
+    const noDateItems: any[] = []
+    
+    items.forEach(item => {
+      const decade = getDecade(item.date || item.year || '')
+      if (decade !== null) {
+        const decadeKey = `${decade}s`
+        if (!grouped[decadeKey]) {
+          grouped[decadeKey] = []
+        }
+        grouped[decadeKey].push(item)
+      } else {
+        noDateItems.push(item)
+      }
+    })
+    
+    // Sort items within each decade
+    Object.keys(grouped).forEach(decade => {
+      grouped[decade].sort(sortByDateAndTitle)
+    })
+    
+    // Sort decades
+    const sortedDecades = Object.keys(grouped).sort((a, b) => {
+      const decadeA = parseInt(a.replace('s', ''))
+      const decadeB = parseInt(b.replace('s', ''))
+      return decadeA - decadeB
+    })
+    
+    return { grouped, sortedDecades, noDateItems }
+  }
+
+  const videosGrouped = groupByDecade(videos)
+
+  // Create chronologically sorted array for navigation
+  const sortedVideos = [
+    ...videosGrouped.sortedDecades.flatMap(decade => videosGrouped.grouped[decade]),
+    ...videosGrouped.noDateItems
+  ]
+
   // Extract YouTube video ID from URL
   const getYouTubeVideoId = (url: string): string | null => {
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
@@ -92,12 +165,12 @@ export function VideoGalleryModal({ isOpen, onClose, videos, startIndex = 0 }: V
 
   // Define all callback functions first
   const handlePrevious = useCallback(() => {
-    setCurrentIndex(prev => prev > 0 ? prev - 1 : videos.length - 1)
-  }, [videos.length])
+    setCurrentIndex(prev => prev > 0 ? prev - 1 : sortedVideos.length - 1)
+  }, [sortedVideos.length])
 
   const handleNext = useCallback(() => {
-    setCurrentIndex(prev => prev < videos.length - 1 ? prev + 1 : 0)
-  }, [videos.length])
+    setCurrentIndex(prev => prev < sortedVideos.length - 1 ? prev + 1 : 0)
+  }, [sortedVideos.length])
 
   const handlePlayPause = useCallback(() => {
     if (isPlaying) {
@@ -142,9 +215,9 @@ export function VideoGalleryModal({ isOpen, onClose, videos, startIndex = 0 }: V
   
   // Update currentIndex when startIndex changes
   useEffect(() => {
-    const validStartIndex = Math.max(0, Math.min(startIndex, videos.length - 1))
+    const validStartIndex = Math.max(0, Math.min(startIndex, sortedVideos.length - 1))
     setCurrentIndex(validStartIndex)
-  }, [startIndex, videos.length])
+  }, [startIndex, sortedVideos.length])
 
   // Control visibility transition for smooth fade-in
   useEffect(() => {
@@ -217,10 +290,10 @@ export function VideoGalleryModal({ isOpen, onClose, videos, startIndex = 0 }: V
 
   if (!isOpen) return null
 
-  const currentVideo = videos[currentIndex]
+  const currentVideo = sortedVideos[currentIndex]
   
   // Check if currentVideo exists and currentIndex is valid
-  if (!currentVideo || currentIndex < 0 || currentIndex >= videos.length) {
+  if (!currentVideo || currentIndex < 0 || currentIndex >= sortedVideos.length) {
     return null
   }
   
@@ -415,31 +488,86 @@ export function VideoGalleryModal({ isOpen, onClose, videos, startIndex = 0 }: V
         </div>
       </div>
 
-      {/* Bottom Thumbnails */}
-      <div className={`h-32 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 transition-opacity duration-1000 ease-in-out ${
+      {/* Bottom Thumbnails with Year Separation */}
+      <div className={`h-40 bg-black/95 backdrop-blur-md flex flex-col transition-opacity duration-1000 ease-in-out ${
         isVisible ? 'opacity-100' : 'opacity-0'
       }`}>
-        <div className="flex gap-3 overflow-x-auto max-w-full">
-          {videos.map((video, index) => {
-            const thumbUrl = getYouTubeThumbnailUrl(video.videoUrl)
-            return (
-              <div
-                key={video.id}
-                onClick={() => handleThumbnailClick(index)}
-                className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden cursor-pointer border-2 transition-all ${
-                  index === currentIndex 
-                    ? 'border-blue-500 shadow-lg' 
-                    : 'border-gray-600 hover:border-gray-400'
-                }`}
-              >
-                <img
-                  src={thumbUrl}
-                  alt={video.title}
-                  className="w-full h-full object-cover"
-                />
+        <div className="flex-1 overflow-x-auto overflow-y-hidden p-4">
+          <div className="flex gap-4 h-full items-center justify-center">
+            {/* Timeline by decades */}
+            {videosGrouped.sortedDecades.map((decade) => (
+              <div key={decade} className="flex-shrink-0">
+                {/* Decade separator */}
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="flex-1 h-px bg-gray-600"></div>
+                  <span className="text-xs font-medium text-gray-400 px-2 whitespace-nowrap">{decade}</span>
+                  <div className="flex-1 h-px bg-gray-600"></div>
+                </div>
+                
+                {/* Thumbnails in this decade */}
+                <div className="flex gap-2">
+                  {videosGrouped.grouped[decade].map((video) => {
+                    const sortedIndex = sortedVideos.findIndex(v => v.id === video.id)
+                    const thumbUrl = getYouTubeThumbnailUrl(video.videoUrl)
+                    return (
+                      <div
+                        key={video.id}
+                        onClick={() => handleThumbnailClick(sortedIndex)}
+                        className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden cursor-pointer border-2 transition-all ${
+                          sortedIndex === currentIndex 
+                            ? 'border-blue-500 shadow-lg' 
+                            : 'border-gray-600 hover:border-gray-400'
+                        }`}
+                      >
+                        <img
+                          src={thumbUrl}
+                          alt={video.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
-            )
-          })}
+            ))}
+            
+            {/* Items without date */}
+            {videosGrouped.noDateItems.length > 0 && (
+              <div className="flex-shrink-0">
+                {/* No date separator */}
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="flex-1 h-px bg-gray-600"></div>
+                  <span className="text-xs font-medium text-gray-400 px-2 whitespace-nowrap">Sin fecha</span>
+                  <div className="flex-1 h-px bg-gray-600"></div>
+                </div>
+                
+                {/* Thumbnails without date */}
+                <div className="flex gap-2">
+                  {videosGrouped.noDateItems.map((video) => {
+                    const sortedIndex = sortedVideos.findIndex(v => v.id === video.id)
+                    const thumbUrl = getYouTubeThumbnailUrl(video.videoUrl)
+                    return (
+                      <div
+                        key={video.id}
+                        onClick={() => handleThumbnailClick(sortedIndex)}
+                        className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden cursor-pointer border-2 transition-all ${
+                          sortedIndex === currentIndex 
+                            ? 'border-blue-500 shadow-lg' 
+                            : 'border-gray-600 hover:border-gray-400'
+                        }`}
+                      >
+                        <img
+                          src={thumbUrl}
+                          alt={video.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
