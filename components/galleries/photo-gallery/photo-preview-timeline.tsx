@@ -63,7 +63,7 @@ export function PhotoPreviewTimeline({
           className="flex h-full items-center gap-4 px-4" // Layout and spacing for all items
           style={{
             transform: `translateX(${transform}px)`,
-            transition: 'transform 0.5s ease-in-out'
+            transition: 'transform 0.1s ease-in-out'
           }}
         >
           {/* Timeline by decades */}
