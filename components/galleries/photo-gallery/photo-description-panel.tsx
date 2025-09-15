@@ -1,6 +1,7 @@
 "use client"
 
 import { type StoryPoint } from "@/lib/csv-parser"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 interface PhotoDescriptionPanelProps {
   currentStory: StoryPoint
@@ -8,11 +9,15 @@ interface PhotoDescriptionPanelProps {
 }
 
 export function PhotoDescriptionPanel({ currentStory, isVisible }: PhotoDescriptionPanelProps) {
+  const isMobile = useIsMobile()
+  
   return (
-    <div className={`w-80 bg-black/95 backdrop-blur-md p-6 flex flex-col justify-center transition-opacity duration-1000 ease-in-out ${
+    <div className={`bg-black/95 backdrop-blur-md flex flex-col justify-center transition-opacity duration-1000 ease-in-out ${
       isVisible ? 'opacity-100' : 'opacity-0'
+    } ${
+      isMobile ? "w-full h-64 p-4" : "w-80 p-6"
     }`}>
-      <div className="space-y-8">
+      <div className={`${isMobile ? "space-y-4" : "space-y-8"}`}>
         {/* Header Info */}
         <div className="flex justify-between items-center text-white text-sm drop-shadow-md">
           <span>{currentStory.location}</span>

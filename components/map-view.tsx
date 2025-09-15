@@ -6,6 +6,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { type StoryPoint } from '@/lib/csv-parser';
 import { MapPopup, createCustomIcon } from './map-popup';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -53,10 +54,11 @@ export default function MapView({
   selectedPoint,
   onPointSelect,
 }: MapViewProps) {
+  const isMobile = useIsMobile();
   const mapRef = useRef<L.Map>(null);
 
   const defaultCenter: [number, number] = [-34.481406534405565, -58.45756925758625];
-  const defaultZoom = 17;
+  const defaultZoom = isMobile ? 15 : 17;
   
   // Define bounds to restrict map movement (Buenos Aires area)
   const mapBounds: L.LatLngBoundsLiteral = [
@@ -70,20 +72,25 @@ export default function MapView({
       <MapContainer
         center={defaultCenter}
         zoom={defaultZoom}
-        minZoom={12}
-        maxZoom={18}
+        minZoom={isMobile ? 10 : 12}
+        maxZoom={isMobile ? 16 : 18}
         className='w-full h-full dark-map'
         ref={mapRef}
         crs={L.CRS.EPSG3857}
         maxBounds={mapBounds}
         maxBoundsViscosity={1.0}
+        zoomControl={!isMobile}
+        dragging={true}
+        touchZoom={true}
+        doubleClickZoom={true}
+        scrollWheelZoom={!isMobile}
       >
         {/* Dark base map layer */}
 
         
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url={`https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png`}
+        	attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url={`https://tile.openstreetmap.org/{z}/{x}/{y}.png`}
           minZoom={0}
           maxZoom={22}
           className="map-dark-layer"

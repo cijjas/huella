@@ -151,7 +151,7 @@ export function MainApp() {
   }
 
   return (
-    <div className="h-screen bg-stone-900 paper-texture relative">
+    <div className="h-screen bg-stone-900 paper-texture relative overflow-hidden">
       <TrenDelBajoOverlay />
       <MapView points={filteredMapPoints} selectedPoint={selectedMapPoint} onPointSelect={handleMapPointSelect} />
 

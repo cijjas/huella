@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { type StoryPoint } from "@/lib/csv-parser"
 import Image from "next/image"
 import { getImageUrl } from "@/lib/utils"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 interface PhotoMainViewProps {
   currentStory: StoryPoint
@@ -27,6 +28,7 @@ export function PhotoMainView({
   onPlayPause, 
   onFullscreen 
 }: PhotoMainViewProps) {
+  const isMobile = useIsMobile()
   const imageUrl = getImageUrl(currentStory)
 
   if (isFullscreen) {
@@ -90,7 +92,9 @@ export function PhotoMainView({
       isVisible ? 'opacity-100' : 'opacity-0'
     }`}>
       {/* Main Image */}
-      <div className="flex-1 flex items-center justify-center p-8 overflow-hidden">
+      <div className={`flex-1 flex items-center justify-center overflow-hidden ${
+        isMobile ? "p-4" : "p-8"
+      }`}>
         <div className="w-full h-full flex items-center justify-center overflow-hidden">
           {imageUrl ? (
             <Image
@@ -115,37 +119,51 @@ export function PhotoMainView({
         variant="ghost"
         size="icon"
         onClick={onPrevious}
-        className="absolute left-4 top-1/2 transform -translate-y-1/2 h-12 w-12 bg-black/50 hover:bg-black/70 text-white rounded-full shadow-lg cursor-pointer"
+        className={`absolute top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full shadow-lg cursor-pointer ${
+          isMobile ? "left-2 h-10 w-10" : "left-4 h-12 w-12"
+        }`}
       >
-        <ChevronLeft className="h-6 w-6" />
+        <ChevronLeft className={`${isMobile ? "h-5 w-5" : "h-6 w-6"}`} />
       </Button>
 
       <Button
         variant="ghost"
         size="icon"
         onClick={onNext}
-        className="absolute right-4 top-1/2 transform -translate-y-1/2 h-12 w-12 bg-black/50 hover:bg-black/70 text-white rounded-full shadow-lg cursor-pointer"
+        className={`absolute top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full shadow-lg cursor-pointer ${
+          isMobile ? "right-2 h-10 w-10" : "right-4 h-12 w-12"
+        }`}
       >
-        <ChevronRight className="h-6 w-6" />
+        <ChevronRight className={`${isMobile ? "h-5 w-5" : "h-6 w-6"}`} />
       </Button>
 
       {/* Bottom Controls */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex items-center gap-4">
+      <div className={`absolute left-1/2 transform -translate-x-1/2 flex items-center ${
+        isMobile ? "bottom-4 gap-2" : "bottom-8 gap-4"
+      }`}>
         <Button
           variant="ghost"
           size="icon"
           onClick={onPlayPause}
-          className="h-10 w-10 bg-black/50 hover:bg-black/70 text-white rounded-full shadow-lg cursor-pointer"
+          className={`bg-black/50 hover:bg-black/70 text-white rounded-full shadow-lg cursor-pointer ${
+            isMobile ? "h-8 w-8" : "h-10 w-10"
+          }`}
         >
-          {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+          {isPlaying ? (
+            <Pause className={`${isMobile ? "h-4 w-4" : "h-5 w-5"}`} />
+          ) : (
+            <Play className={`${isMobile ? "h-4 w-4" : "h-5 w-5"}`} />
+          )}
         </Button>
         <Button
           variant="ghost"
           size="icon"
           onClick={onFullscreen}
-          className="h-10 w-10 bg-black/50 hover:bg-black/70 text-white rounded-full shadow-lg cursor-pointer"
+          className={`bg-black/50 hover:bg-black/70 text-white rounded-full shadow-lg cursor-pointer ${
+            isMobile ? "h-8 w-8" : "h-10 w-10"
+          }`}
         >
-          <Maximize2 className="h-5 w-5" />
+          <Maximize2 className={`${isMobile ? "h-4 w-4" : "h-5 w-5"}`} />
         </Button>
       </div>
     </div>

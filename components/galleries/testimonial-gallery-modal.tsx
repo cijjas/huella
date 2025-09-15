@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { type StoryPoint } from "@/lib/csv-parser"
 import { useState, useRef, useEffect, useCallback } from "react"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 interface Testimonial {
   id: string
@@ -25,6 +26,8 @@ interface TestimonialGalleryModalProps {
 }
 
 export function TestimonialGalleryModal({ isOpen, onClose, testimonials, startIndex = 0 }: TestimonialGalleryModalProps) {
+  const isMobile = useIsMobile()
+  
   // Ensure startIndex is within bounds
   const validStartIndex = Math.max(0, Math.min(startIndex, testimonials.length - 1))
   const [currentIndex, setCurrentIndex] = useState(validStartIndex)
@@ -275,7 +278,7 @@ export function TestimonialGalleryModal({ isOpen, onClose, testimonials, startIn
           <div className="w-full h-full flex items-center justify-center p-8 overflow-hidden">
             <div className="max-w-4xl w-full">
               <Card className="bg-gray-900/95 backdrop-blur-sm border-gray-700 shadow-2xl">
-                <CardContent className="p-12">
+                <CardContent className={`${isMobile ? "p-6" : "p-12"}`}>
                   <div className="flex items-start gap-4 mb-6">
                     <div className="flex-shrink-0 w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
                       <Quote className="h-6 w-6 text-white" />
@@ -343,12 +346,16 @@ export function TestimonialGalleryModal({ isOpen, onClose, testimonials, startIn
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className={`flex flex-1 overflow-hidden ${
+        isMobile ? "flex-col" : ""
+      }`}>
         {/* Left Information Panel */}
-        <div className={`w-80 bg-black/95 backdrop-blur-md p-6 flex flex-col justify-center transition-opacity duration-1000 ease-in-out ${
+        <div className={`bg-black/95 backdrop-blur-md flex flex-col justify-center transition-opacity duration-1000 ease-in-out ${
           isVisible ? 'opacity-100' : 'opacity-0'
+        } ${
+          isMobile ? "w-full h-64 p-4" : "w-80 p-6"
         }`}>
-          <div className="space-y-8">
+          <div className={`${isMobile ? "space-y-4" : "space-y-8"}`}>
             {/* Header Info */}
             <div className="flex justify-between items-center text-white text-sm drop-shadow-md">
               <span>{currentTestimonial.location}</span>
@@ -390,10 +397,12 @@ export function TestimonialGalleryModal({ isOpen, onClose, testimonials, startIn
           isVisible ? 'opacity-100' : 'opacity-0'
         }`}>
           {/* Main Testimonial */}
-          <div className="flex-1 flex items-center justify-center p-8 overflow-hidden">
+          <div className={`flex-1 flex items-center justify-center overflow-hidden ${
+            isMobile ? "p-4" : "p-8"
+          }`}>
             <div className="max-w-4xl w-full">
               <Card className="bg-gray-900/95 backdrop-blur-sm border-gray-700 shadow-2xl">
-                <CardContent className="p-12">
+                <CardContent className={`${isMobile ? "p-6" : "p-12"}`}>
                   <div className="flex items-start gap-4 mb-6">
                     <div className="flex-shrink-0 w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
                       <Quote className="h-6 w-6 text-white" />
@@ -429,46 +438,60 @@ export function TestimonialGalleryModal({ isOpen, onClose, testimonials, startIn
             variant="ghost"
             size="icon"
             onClick={handlePrevious}
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 h-12 w-12 bg-black/50 hover:bg-black/70 text-white rounded-full shadow-lg cursor-pointer"
+            className={`absolute top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full shadow-lg cursor-pointer ${
+              isMobile ? "left-2 h-10 w-10" : "left-4 h-12 w-12"
+            }`}
           >
-            <ChevronLeft className="h-6 w-6" />
+            <ChevronLeft className={`${isMobile ? "h-5 w-5" : "h-6 w-6"}`} />
           </Button>
 
           <Button
             variant="ghost"
             size="icon"
             onClick={handleNext}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 h-12 w-12 bg-black/50 hover:bg-black/70 text-white rounded-full shadow-lg cursor-pointer"
+            className={`absolute top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full shadow-lg cursor-pointer ${
+              isMobile ? "right-2 h-10 w-10" : "right-4 h-12 w-12"
+            }`}
           >
-            <ChevronRight className="h-6 w-6" />
+            <ChevronRight className={`${isMobile ? "h-5 w-5" : "h-6 w-6"}`} />
           </Button>
 
           {/* Bottom Controls */}
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex items-center gap-4">
+          <div className={`absolute left-1/2 transform -translate-x-1/2 flex items-center ${
+            isMobile ? "bottom-4 gap-2" : "bottom-8 gap-4"
+          }`}>
             <Button
               variant="ghost"
               size="icon"
               onClick={handlePlayPause}
-              className="h-10 w-10 bg-black/50 hover:bg-black/70 text-white rounded-full shadow-lg cursor-pointer"
+              className={`bg-black/50 hover:bg-black/70 text-white rounded-full shadow-lg cursor-pointer ${
+                isMobile ? "h-8 w-8" : "h-10 w-10"
+              }`}
             >
-              {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+              {isPlaying ? (
+                <Pause className={`${isMobile ? "h-4 w-4" : "h-5 w-5"}`} />
+              ) : (
+                <Play className={`${isMobile ? "h-4 w-4" : "h-5 w-5"}`} />
+              )}
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={handleFullscreen}
-              className="h-10 w-10 bg-black/50 hover:bg-black/70 text-white rounded-full shadow-lg cursor-pointer"
+              className={`bg-black/50 hover:bg-black/70 text-white rounded-full shadow-lg cursor-pointer ${
+                isMobile ? "h-8 w-8" : "h-10 w-10"
+              }`}
             >
-              <Maximize2 className="h-5 w-5" />
+              <Maximize2 className={`${isMobile ? "h-4 w-4" : "h-5 w-5"}`} />
             </Button>
           </div>
         </div>
       </div>
 
       {/* Bottom Thumbnails with Year Separation */}
-      <div className={`h-40 bg-black/95 backdrop-blur-md flex flex-col transition-opacity duration-1000 ease-in-out ${
+      <div className={`bg-black/95 backdrop-blur-md flex flex-col transition-opacity duration-1000 ease-in-out ${
         isVisible ? 'opacity-100' : 'opacity-0'
-      }`}>
+      } ${isMobile ? "h-32" : "h-40"}`}>
         <div className="flex-1 overflow-x-auto overflow-y-hidden p-4">
           <div className="flex gap-4 h-full items-center justify-center">
             {/* Timeline by decades */}

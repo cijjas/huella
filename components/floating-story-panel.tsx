@@ -9,6 +9,7 @@ import Image from "next/image"
 import { getImageUrl } from "@/lib/utils"
 import { useState } from "react"
 import { PhotoGalleryModal, VideoGalleryModal, TestimonialGalleryModal } from "@/components/galleries"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 interface MapPoint {
   id: string
@@ -40,6 +41,7 @@ export function FloatingStoryPanel({
   isMinimized,
   onToggleMinimize,
 }: FloatingStoryPanelProps) {
+  const isMobile = useIsMobile()
 
   const [showImageGallery, setShowImageGallery] = useState(false)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
@@ -248,10 +250,17 @@ export function FloatingStoryPanel({
   }
 
   // Testimonials gallery handlers
-  const openTestimonialsGallery = (index: number) => {
+  const openTestimonialsGallery = (testimonial: any) => {
+    // Find the index in the sorted testimonials array
+    const sortedTestimonials = [
+      ...testimoniosGrouped.sortedDecades.flatMap(decade => testimoniosGrouped.grouped[decade]),
+      ...testimoniosGrouped.noDateItems
+    ]
+    const sortedIndex = sortedTestimonials.findIndex(t => t.id === testimonial.id)
+    
     // Ensure the index is valid
-    if (index >= 0 && index < testimonios.length) {
-      setSelectedTestimonialIndex(index)
+    if (sortedIndex >= 0 && sortedIndex < sortedTestimonials.length) {
+      setSelectedTestimonialIndex(sortedIndex)
       setShowTestimonialsGallery(true)
     }
   }
@@ -262,23 +271,33 @@ export function FloatingStoryPanel({
 
   return (
     <div
-      className={`fixed top-4 right-4 w-[640px] z-[1000] transition-all duration-300 ${
-        isMinimized ? "h-16" : "h-[calc(100vh-2rem)]"
+      className={`fixed z-[1000] transition-all duration-300 ${
+        isMobile 
+          ? `top-0 left-0 right-0 ${isMinimized ? "h-16" : "h-full"}`
+          : `top-4 right-4 w-[640px] ${isMinimized ? "h-16" : "h-[calc(100vh-2rem)]"}`
       }`}
     >
-             <div className="bg-stone-50 shadow-2xl h-full overflow-hidden  border-primary rounded-2xl">
-         <div className="flex items-center justify-between p-4 border-b border-border/30 bg-stone-50/95 backdrop-blur-sm">
+             <div className={`bg-stone-50 shadow-2xl h-full overflow-hidden border-primary ${
+               isMobile ? "rounded-none" : "rounded-2xl"
+             }`}>
+         <div className={`flex items-center justify-between border-b border-border/30 bg-stone-50/95 backdrop-blur-sm ${
+           isMobile ? "p-3" : "p-4"
+         }`}>
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
               onClick={handlePrevious}
               disabled={!canGoBack}
-              className="h-8 w-8 rounded-full hover:bg-muted/50 disabled:opacity-30"
+              className={`rounded-full hover:bg-muted/50 disabled:opacity-30 ${
+                isMobile ? "h-10 w-10" : "h-8 w-8"
+              }`}
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className={`${isMobile ? "h-5 w-5" : "h-4 w-4"}`} />
             </Button>
-            <span className="text-xs text-muted-foreground font-medium">
+            <span className={`text-muted-foreground font-medium ${
+              isMobile ? "text-sm" : "text-xs"
+            }`}>
               {currentIndex + 1} / {allMapPoints.length}
             </span>
             <Button
@@ -286,12 +305,16 @@ export function FloatingStoryPanel({
               size="icon"
               onClick={handleNext}
               disabled={!canGoForward}
-              className="h-8 w-8 rounded-full hover:bg-muted/50 disabled:opacity-30"
+              className={`rounded-full hover:bg-muted/50 disabled:opacity-30 ${
+                isMobile ? "h-10 w-10" : "h-8 w-8"
+              }`}
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className={`${isMobile ? "h-5 w-5" : "h-4 w-4"}`} />
             </Button>
             {isMinimized && (
-              <span className="text-sm font-semibold text-foreground font-heading ml-4">
+              <span className={`font-semibold text-foreground font-heading ml-4 ${
+                isMobile ? "text-base" : "text-sm"
+              }`}>
                 {mapPoint.primaryStory.location}
               </span>
             )}
@@ -302,17 +325,27 @@ export function FloatingStoryPanel({
               variant="ghost"
               size="icon"
               onClick={onToggleMinimize}
-              className="h-8 w-8 rounded-full hover:bg-muted/50"
+              className={`rounded-full hover:bg-muted/50 ${
+                isMobile ? "h-10 w-10" : "h-8 w-8"
+              }`}
             >
-              {isMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
+              {isMinimized ? (
+                <Maximize2 className={`${isMobile ? "h-5 w-5" : "h-4 w-4"}`} />
+              ) : (
+                <Minimize2 className={`${isMobile ? "h-5 w-5" : "h-4 w-4"}`} />
+              )}
             </Button>
           </div>
         </div>
 
         {!isMinimized && (
-          <div className="flex-1 overflow-y-auto scrollbar-thin">
+          <div className={`flex-1 overflow-y-auto scrollbar-thin ${
+            isMobile ? "pb-4" : ""
+          }`}>
             {/* Main Image with Title Overlay */}
-                         <div className="relative h-48 bg-gradient-to-br from-stone-50/20 to-stone-50/40 flex items-center justify-center overflow-hidden">
+                         <div className={`relative bg-gradient-to-br from-stone-50/20 to-stone-50/40 flex items-center justify-center overflow-hidden ${
+                           isMobile ? "h-40" : "h-48"
+                         }`}>
               {(() => {
                 const imageUrl = getImageUrl(mapPoint.primaryStory)
                 return imageUrl ? (
@@ -350,22 +383,26 @@ export function FloatingStoryPanel({
             {/* Tabs Only */}
             <div className="p-6">
               <Tabs defaultValue="fotografias" className="w-full">
-                <TabsList className="w-full">
-                  <TabsTrigger value="fotografias" className="flex-1">
-                    Fotografías ({fotografias.length})
+                <TabsList className={`w-full ${
+                  isMobile ? "grid grid-cols-2 gap-1" : ""
+                }`}>
+                  <TabsTrigger value="fotografias" className={`${isMobile ? "text-xs" : "flex-1"}`}>
+                    {isMobile ? `Fotos (${fotografias.length})` : `Fotografías (${fotografias.length})`}
                   </TabsTrigger>
-                  <TabsTrigger value="testimonios" className="flex-1">
-                    Testimonios ({testimonios.length})
+                  <TabsTrigger value="testimonios" className={`${isMobile ? "text-xs" : "flex-1"}`}>
+                    {isMobile ? `Test. (${testimonios.length})` : `Testimonios (${testimonios.length})`}
                   </TabsTrigger>
-                  <TabsTrigger value="articulos" className="flex-1">
-                    Artículos ({articulos.length})
+                  <TabsTrigger value="articulos" className={`${isMobile ? "text-xs" : "flex-1"}`}>
+                    {isMobile ? `Art. (${articulos.length})` : `Artículos (${articulos.length})`}
                   </TabsTrigger>
-                  <TabsTrigger value="videos" className="flex-1">
+                  <TabsTrigger value="videos" className={`${isMobile ? "text-xs" : "flex-1"}`}>
                     Videos ({videos.length})
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="fotografias" className="mt-4 max-h-[calc(100vh-400px)] overflow-y-auto scrollbar-thin">
+                <TabsContent value="fotografias" className={`mt-4 overflow-y-auto scrollbar-thin ${
+                  isMobile ? "max-h-[calc(100vh-300px)]" : "max-h-[calc(100vh-400px)]"
+                }`}>
                   <div className="space-y-6">
                     {fotografias.length > 0 ? (
                       <>
@@ -469,7 +506,9 @@ export function FloatingStoryPanel({
                   </div>
                 </TabsContent>
 
-                <TabsContent value="testimonios" className="mt-4 max-h-[calc(100vh-400px)] overflow-y-auto scrollbar-thin">
+                <TabsContent value="testimonios" className={`mt-4 overflow-y-auto scrollbar-thin ${
+                  isMobile ? "max-h-[calc(100vh-300px)]" : "max-h-[calc(100vh-400px)]"
+                }`}>
                   <div className="space-y-6">
                     {testimonios.length > 0 ? (
                       <>
@@ -486,12 +525,11 @@ export function FloatingStoryPanel({
                             {/* Items in this decade */}
                             <div className="space-y-3">
                               {testimoniosGrouped.grouped[decade].map((testimonial, index) => {
-                                const globalIndex = testimonios.findIndex(t => t.id === testimonial.id)
                                 return (
                                   <Card 
                                     key={testimonial.id} 
                                     className="cursor-pointer hover:bg-accent/5 transition-colors"
-                                    onClick={() => openTestimonialsGallery(globalIndex)}
+                                    onClick={() => openTestimonialsGallery(testimonial)}
                                   >
                                     <CardContent className="p-4">
                                       <div className="flex items-start gap-3">
@@ -537,12 +575,11 @@ export function FloatingStoryPanel({
                             {/* Items without date */}
                             <div className="space-y-3">
                               {testimoniosGrouped.noDateItems.map((testimonial, index) => {
-                                const globalIndex = testimonios.findIndex(t => t.id === testimonial.id)
                                 return (
                                   <Card 
                                     key={testimonial.id} 
                                     className="cursor-pointer hover:bg-accent/5 transition-colors"
-                                    onClick={() => openTestimonialsGallery(globalIndex)}
+                                    onClick={() => openTestimonialsGallery(testimonial)}
                                   >
                                     <CardContent className="p-4">
                                       <div className="flex items-start gap-3">
@@ -589,7 +626,9 @@ export function FloatingStoryPanel({
                   </div>
                 </TabsContent>
 
-                <TabsContent value="articulos" className="mt-4 max-h-[calc(100vh-400px)] overflow-y-auto scrollbar-thin">
+                <TabsContent value="articulos" className={`mt-4 overflow-y-auto scrollbar-thin ${
+                  isMobile ? "max-h-[calc(100vh-300px)]" : "max-h-[calc(100vh-400px)]"
+                }`}>
                   <div className="space-y-6">
                     {articulos.length > 0 ? (
                       <>
@@ -729,7 +768,9 @@ export function FloatingStoryPanel({
                   </div>
                 </TabsContent>
 
-                <TabsContent value="videos" className="mt-4 max-h-[calc(100vh-400px)] overflow-y-auto scrollbar-thin">
+                <TabsContent value="videos" className={`mt-4 overflow-y-auto scrollbar-thin ${
+                  isMobile ? "max-h-[calc(100vh-300px)]" : "max-h-[calc(100vh-400px)]"
+                }`}>
                   <div className="space-y-6">
                     {videos.length > 0 ? (
                       <>

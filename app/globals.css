@@ -201,3 +201,34 @@
   text-decoration: underline !important;
 }
 
+/* Mobile-specific improvements */
+@media (max-width: 768px) {
+  /* Improve touch targets */
+  .leaflet-control-zoom a {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+  
+  /* Better mobile popup styling */
+  .leaflet-popup-content-wrapper {
+    border-radius: 12px !important;
+  }
+  
+  .leaflet-popup-content {
+    margin: 12px !important;
+    font-size: 14px !important;
+  }
+  
+  /* Improve mobile gallery modal touch targets */
+  .image-gallery-thumbnail {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better mobile button spacing */
+  .mobile-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+

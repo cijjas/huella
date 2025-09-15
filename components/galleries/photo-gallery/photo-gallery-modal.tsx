@@ -9,6 +9,7 @@ import { useState, useRef, useEffect, useCallback } from "react"
 import { PhotoDescriptionPanel } from "./photo-description-panel"
 import { PhotoMainView } from "./photo-main-view"
 import { PhotoPreviewTimeline } from "./photo-preview-timeline"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 interface PhotoGalleryModalProps {
   isOpen: boolean
@@ -18,6 +19,8 @@ interface PhotoGalleryModalProps {
 }
 
 export function PhotoGalleryModal({ isOpen, onClose, fotografias, startIndex = 0 }: PhotoGalleryModalProps) {
+  const isMobile = useIsMobile()
+  
   // Ensure startIndex is within bounds
   const validStartIndex = Math.max(0, Math.min(startIndex, fotografias.length - 1))
   const [currentIndex, setCurrentIndex] = useState(validStartIndex)
@@ -295,7 +298,9 @@ export function PhotoGalleryModal({ isOpen, onClose, fotografias, startIndex = 0
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className={`flex flex-1 overflow-hidden ${
+        isMobile ? "flex-col" : ""
+      }`}>
         {/* Left Information Panel */}
         <PhotoDescriptionPanel 
           currentStory={currentStory}
