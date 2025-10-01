@@ -292,6 +292,7 @@ export function PhotoGalleryModal({ isOpen, onClose, fotografias, startIndex = 0
           size="icon"
           onClick={onClose}
           className="h-12 w-12 bg-black/50 hover:bg-black/70 text-white rounded-full cursor-pointer"
+          aria-label="Cerrar galería"
         >
           <X className="h-6 w-6" />
         </Button>

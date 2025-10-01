@@ -122,6 +122,16 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Enhanced focus visibility for keyboard navigation */
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary;
+  }
+  
+  /* Skip link for screen readers */
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md;
+  }
 }
 
 /* Custom scrollbar styling */
@@ -207,6 +217,21 @@
   .leaflet-control-zoom a {
     min-height: 44px !important;
     min-width: 44px !important;
+    font-size: 20px !important;
+    line-height: 44px !important;
+  }
+  
+  /* Position zoom controls at bottom right on mobile */
+  .leaflet-bottom.leaflet-right {
+    bottom: 16px !important;
+    right: 16px !important;
+  }
+  
+  /* Style the zoom control container on mobile */
+  .leaflet-control-zoom {
+    border-radius: 12px !important;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
   }
   
   /* Better mobile popup styling */

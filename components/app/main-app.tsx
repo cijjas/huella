@@ -151,7 +151,7 @@ export function MainApp() {
   }
 
   return (
-    <div className="h-screen bg-stone-900 paper-texture relative overflow-hidden">
+    <main className="h-screen bg-stone-900 paper-texture relative overflow-hidden" role="main">
       <TrenDelBajoOverlay />
       <MapView points={filteredMapPoints} selectedPoint={selectedMapPoint} onPointSelect={handleMapPointSelect} />
 
@@ -167,6 +167,6 @@ export function MainApp() {
           onToggleMinimize={() => setIsPanelMinimized(!isPanelMinimized)}
         />
       )}
-    </div>
+    </main>
   )
 }

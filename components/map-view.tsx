@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { type StoryPoint } from '@/lib/csv-parser';
@@ -79,7 +79,7 @@ export default function MapView({
         crs={L.CRS.EPSG3857}
         maxBounds={mapBounds}
         maxBoundsViscosity={1.0}
-        zoomControl={!isMobile}
+        zoomControl={false}
         dragging={true}
         touchZoom={true}
         doubleClickZoom={true}
@@ -105,6 +105,9 @@ export default function MapView({
         />
 
         <MapController selectedPoint={selectedPoint} />
+        
+        {/* Zoom control positioned bottom-right on mobile, top-left on desktop */}
+        <ZoomControl position={isMobile ? 'bottomright' : 'topleft'} />
 
         {/* Visual bounds rectangle (optional - for debugging) */}
         {/* <Rectangle

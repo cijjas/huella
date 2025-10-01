@@ -292,6 +292,7 @@ export function FloatingStoryPanel({
               className={`rounded-full hover:bg-muted/50 disabled:opacity-30 ${
                 isMobile ? "h-10 w-10" : "h-8 w-8"
               }`}
+              aria-label="Ubicación anterior"
             >
               <ChevronLeft className={`${isMobile ? "h-5 w-5" : "h-4 w-4"}`} />
             </Button>
@@ -308,6 +309,7 @@ export function FloatingStoryPanel({
               className={`rounded-full hover:bg-muted/50 disabled:opacity-30 ${
                 isMobile ? "h-10 w-10" : "h-8 w-8"
               }`}
+              aria-label="Siguiente ubicación"
             >
               <ChevronRight className={`${isMobile ? "h-5 w-5" : "h-4 w-4"}`} />
             </Button>
@@ -328,6 +330,7 @@ export function FloatingStoryPanel({
               className={`rounded-full hover:bg-muted/50 ${
                 isMobile ? "h-10 w-10" : "h-8 w-8"
               }`}
+              aria-label={isMinimized ? "Expandir panel" : "Minimizar panel"}
             >
               {isMinimized ? (
                 <Maximize2 className={`${isMobile ? "h-5 w-5" : "h-4 w-4"}`} />
@@ -423,8 +426,17 @@ export function FloatingStoryPanel({
                                 return (
                                   <div 
                                     key={story.id} 
-                                    className="cursor-pointer aspect-square bg-stone-50 rounded-md overflow-hidden hover:opacity-80 transition-opacity"
+                                    className="cursor-pointer aspect-square bg-stone-50 rounded-md overflow-hidden hover:opacity-80 transition-opacity focus-within:ring-2 focus-within:ring-primary"
                                     onClick={() => openImageGallery(story)}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault()
+                                        openImageGallery(story)
+                                      }
+                                    }}
+                                    aria-label={`Ver fotografía: ${story.title}`}
                                   >
                                     {imageUrl ? (
                                       <Image 
@@ -465,8 +477,17 @@ export function FloatingStoryPanel({
                                 return (
                                   <div 
                                     key={story.id} 
-                                    className="cursor-pointer aspect-square bg-stone-50 rounded-md overflow-hidden hover:opacity-80 transition-opacity"
+                                    className="cursor-pointer aspect-square bg-stone-50 rounded-md overflow-hidden hover:opacity-80 transition-opacity focus-within:ring-2 focus-within:ring-primary"
                                     onClick={() => openImageGallery(story)}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault()
+                                        openImageGallery(story)
+                                      }
+                                    }}
+                                    aria-label={`Ver fotografía: ${story.title}`}
                                   >
                                     {imageUrl ? (
                                       <Image 
@@ -528,8 +549,16 @@ export function FloatingStoryPanel({
                                 return (
                                   <Card 
                                     key={testimonial.id} 
-                                    className="cursor-pointer hover:bg-accent/5 transition-colors"
+                                    className="cursor-pointer hover:bg-accent/5 transition-colors focus-within:ring-2 focus-within:ring-primary"
                                     onClick={() => openTestimonialsGallery(testimonial)}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault()
+                                        openTestimonialsGallery(testimonial)
+                                      }
+                                    }}
                                   >
                                     <CardContent className="p-4">
                                       <div className="flex items-start gap-3">
@@ -578,8 +607,16 @@ export function FloatingStoryPanel({
                                 return (
                                   <Card 
                                     key={testimonial.id} 
-                                    className="cursor-pointer hover:bg-accent/5 transition-colors"
+                                    className="cursor-pointer hover:bg-accent/5 transition-colors focus-within:ring-2 focus-within:ring-primary"
                                     onClick={() => openTestimonialsGallery(testimonial)}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault()
+                                        openTestimonialsGallery(testimonial)
+                                      }
+                                    }}
                                   >
                                     <CardContent className="p-4">
                                       <div className="flex items-start gap-3">
@@ -650,8 +687,16 @@ export function FloatingStoryPanel({
                                 return (
                                   <Card 
                                     key={story.id} 
-                                    className="cursor-pointer hover:bg-accent/5 transition-colors"
+                                    className="cursor-pointer hover:bg-accent/5 transition-colors focus-within:ring-2 focus-within:ring-primary"
                                     onClick={() => openArticleGallery(globalIndex)}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault()
+                                        openArticleGallery(globalIndex)
+                                      }
+                                    }}
                                   >
                                     <CardContent className="p-4">
                                       <div className="flex gap-4">
@@ -711,8 +756,16 @@ export function FloatingStoryPanel({
                                 return (
                                   <Card 
                                     key={story.id} 
-                                    className="cursor-pointer hover:bg-accent/5 transition-colors"
+                                    className="cursor-pointer hover:bg-accent/5 transition-colors focus-within:ring-2 focus-within:ring-primary"
                                     onClick={() => openArticleGallery(globalIndex)}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault()
+                                        openArticleGallery(globalIndex)
+                                      }
+                                    }}
                                   >
                                     <CardContent className="p-4">
                                       <div className="flex gap-4">
@@ -833,10 +886,19 @@ export function FloatingStoryPanel({
                                     key={video.id} 
                                     className="cursor-pointer aspect-video bg-stone-50 rounded-md overflow-hidden hover:opacity-80 transition-opacity relative group"
                                     onClick={() => openVideoGallery(globalIndex)}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault()
+                                        openVideoGallery(globalIndex)
+                                      }
+                                    }}
+                                    aria-label={`Ver video: ${video.title}`}
                                   >
                                     <img 
                                       src={thumbnailUrl}
-                                      alt={video.title}
+                                      alt={`Miniatura del video: ${video.title}`}
                                       className="w-full h-full object-cover"
                                     />
                                     {/* Play button overlay */}
@@ -916,10 +978,19 @@ export function FloatingStoryPanel({
                                     key={video.id} 
                                     className="cursor-pointer aspect-video bg-stone-50 rounded-md overflow-hidden hover:opacity-80 transition-opacity relative group"
                                     onClick={() => openVideoGallery(globalIndex)}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault()
+                                        openVideoGallery(globalIndex)
+                                      }
+                                    }}
+                                    aria-label={`Ver video: ${video.title}`}
                                   >
                                     <img 
                                       src={thumbnailUrl}
-                                      alt={video.title}
+                                      alt={`Miniatura del video: ${video.title}`}
                                       className="w-full h-full object-cover"
                                     />
                                     {/* Play button overlay */}
