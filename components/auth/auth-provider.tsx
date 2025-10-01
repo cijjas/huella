@@ -3,6 +3,11 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from "react"
 import { PasswordLanding } from "./password-landing"
 
+// ============================================================================
+// FEATURE FLAG: Set to true to enable password protection
+// ============================================================================
+const ENABLE_PASSWORD_PROTECTION = false
+
 interface AuthContextType {
   isAuthenticated: boolean
   isLoading: boolean
@@ -21,6 +26,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    // If password protection is disabled, automatically authenticate
+    if (!ENABLE_PASSWORD_PROTECTION) {
+      setIsAuthenticated(true)
+      setIsLoading(false)
+      return
+    }
+
     // Check if user is already authenticated
     const authStatus = sessionStorage.getItem("huella_authenticated")
     if (authStatus === "true") {
@@ -49,7 +61,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     )
   }
 
-  if (!isAuthenticated) {
+  // Only show password landing if password protection is enabled and user is not authenticated
+  if (ENABLE_PASSWORD_PROTECTION && !isAuthenticated) {
     return <PasswordLanding onPasswordCorrect={login} />
   }
 
